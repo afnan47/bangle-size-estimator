@@ -692,11 +692,22 @@
       color: var(--state-danger);
       box-shadow: 0 0 10px rgba(239, 68, 68, 0.1);
     }
+    /* Generic utility */
+    .hidden {
+      display: none !important;
+    }
+
     .feedback-sizes-container {
       margin-top: 16px;
       padding-top: 14px;
       border-top: 1px solid rgba(255, 255, 255, 0.05);
-      transition: all 0.3s ease;
+      overflow: hidden;
+      animation: slideDown 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
     .feedback-instruction {
       font-size: 0.8rem;
@@ -809,6 +820,18 @@
   </style>
 </head>
 <body>
+
+  <!-- Global SVG defs: shared gradients referenced throughout the page.
+       Must live here (not inside a display:none element) so the browser can resolve url() references. -->
+  <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute">
+    <defs>
+      <linearGradient id="cyan-blue-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%"   stop-color="#06b6d4" />
+        <stop offset="100%" stop-color="#3b82f6" />
+      </linearGradient>
+    </defs>
+  </svg>
+
 
   <!-- 1. ONBOARDING & WELCOME SCREEN -->
   <section id="screen-onboarding" class="screen">
@@ -945,12 +968,6 @@
           <circle cx="50" cy="50" r="44" stroke="rgba(255, 255, 255, 0.05)" stroke-width="6" fill="none" />
           <!-- Neon colored circle representing the locked recommended size -->
           <circle id="result-svg-circle" cx="50" cy="50" r="44" stroke="url(#cyan-blue-grad)" stroke-width="6" fill="none" stroke-dasharray="276" stroke-dashoffset="0" />
-          <defs>
-            <linearGradient id="cyan-blue-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#06b6d4" />
-              <stop offset="100%" stop-color="#3b82f6" />
-            </linearGradient>
-          </defs>
         </svg>
         <div id="result-size-label" class="size-label-large">2.6</div>
       </div>
@@ -1010,7 +1027,7 @@
         <!-- Confirmation message -->
         <div id="feedback-success-msg" class="feedback-success-msg hidden">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: middle;"><polyline points="20 6 9 17 4 12"/></svg>
-          Sizer calibrated successfully!
+          Thank you for your feedback!
         </div>
       </div>
 
@@ -1333,15 +1350,21 @@
       document.getElementById('btn-feedback-yes').addEventListener('click', () => {
         localStorage.setItem('bangle_sizer_calibration_scale', calibrationScale.toString());
         console.log(`Feedback confirmed: Bangle size correct. Calibration scale: ${calibrationScale.toFixed(4)}`);
-        
+
+        // Hide Yes/No buttons and show success message
         document.querySelector('.feedback-buttons-row').classList.add('hidden');
+        document.getElementById('feedback-sizes-container').classList.add('hidden');
         document.getElementById('feedback-success-msg').classList.remove('hidden');
+        document.querySelector('.feedback-question').classList.add('hidden');
       });
 
-      // Feedback button No click handler
+      // Feedback button No click handler — slide in size correction grid below
       document.getElementById('btn-feedback-no').addEventListener('click', () => {
-        document.querySelector('.feedback-buttons-row').classList.add('hidden');
-        document.getElementById('feedback-sizes-container').classList.remove('hidden');
+        const sizesContainer = document.getElementById('feedback-sizes-container');
+        if (sizesContainer.classList.contains('hidden')) {
+          // Re-trigger animation by removing and re-adding element
+          sizesContainer.classList.remove('hidden');
+        }
       });
 
       // Interactive feedback size pills (circle buttons) click handler
@@ -1365,8 +1388,11 @@
 
           selectBangleSize(correctSize);
 
+          // Hide the whole feedback panel interaction and show success
+          document.querySelector('.feedback-buttons-row').classList.add('hidden');
           document.getElementById('feedback-sizes-container').classList.add('hidden');
           document.getElementById('feedback-success-msg').classList.remove('hidden');
+          document.querySelector('.feedback-question').classList.add('hidden');
         });
       });
       
@@ -1674,11 +1700,13 @@
       const feedbackButtonsRow = document.querySelector('.feedback-buttons-row');
       const feedbackSizesContainer = document.getElementById('feedback-sizes-container');
       const feedbackSuccessMsg = document.getElementById('feedback-success-msg');
+      const feedbackQuestion = document.querySelector('.feedback-question');
       const sizePills = document.querySelectorAll('.btn-feedback-circle');
 
       if (feedbackButtonsRow) feedbackButtonsRow.classList.remove('hidden');
       if (feedbackSizesContainer) feedbackSizesContainer.classList.add('hidden');
       if (feedbackSuccessMsg) feedbackSuccessMsg.classList.add('hidden');
+      if (feedbackQuestion) feedbackQuestion.classList.remove('hidden');
       if (sizePills) sizePills.forEach(p => p.classList.remove('selected'));
     }
 
