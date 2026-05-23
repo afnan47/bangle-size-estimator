@@ -1121,11 +1121,17 @@
 
     function recalibrate() {
       calibrationLocked = false;
+      isProcessingHand = false;
       stableMeasurementCount = 0;
       kalmanFilter.reset(60.0);
       lastValidHandPositions = null;
-      overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+      if (overlayCtx && overlayCanvas) {
+        overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+      }
       updateHUD("Searching...", "--.- mm", 0, "Fit your knuckles (index to pinky base) inside the frame");
+      if (resultModal) {
+        resultModal.classList.add('hidden');
+      }
     }
 
     // ------------------------------------------------------------------------
