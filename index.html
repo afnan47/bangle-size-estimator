@@ -633,6 +633,109 @@
       transition: left 0.3s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
+    /* Feedback panel design */
+    .feedback-panel {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px dashed rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 24px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    .feedback-question {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+    .feedback-buttons-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+    .btn-feedback {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      border-radius: 12px;
+      padding: 8px 24px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .btn-feedback:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+    }
+    .btn-feedback-yes:hover {
+      border-color: rgba(16, 185, 129, 0.4);
+      color: var(--state-success);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+    }
+    .btn-feedback-no:hover {
+      border-color: rgba(239, 68, 68, 0.4);
+      color: var(--state-danger);
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.1);
+    }
+    .feedback-sizes-container {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.3s ease;
+    }
+    .feedback-instruction {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+    .size-selection-grid {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-feedback-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .btn-feedback-circle:hover {
+      background: rgba(6, 182, 212, 0.15);
+      border-color: var(--accent-cyan);
+      color: var(--text-primary);
+      box-shadow: 0 0 8px rgba(6, 182, 212, 0.25);
+      transform: translateY(-2px);
+    }
+    .btn-feedback-circle.selected {
+      background: var(--accent-grad);
+      border-color: transparent;
+      color: var(--text-primary);
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+    }
+    .feedback-success-msg {
+      font-size: 0.85rem;
+      color: var(--state-success);
+      font-weight: 600;
+      padding: 4px 0;
+      transition: all 0.3s ease;
+    }
+
     /* Error Overlay */
     #error-modal {
       background: #090d16;
@@ -848,6 +951,39 @@
           <div id="tick-2-10" class="ruler-tick">2.10</div>
           <!-- Sliding marker showing the user's fit position -->
           <div id="result-ruler-marker" class="ruler-marker" style="left: 50%;"></div>
+        </div>
+      </div>
+
+      <!-- Feedback panel -->
+      <div id="feedback-panel" class="feedback-panel">
+        <p class="feedback-question">Is this recommendation correct?</p>
+        <div class="feedback-buttons-row">
+          <button id="btn-feedback-yes" class="btn-feedback btn-feedback-yes">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: middle;"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+            Yes
+          </button>
+          <button id="btn-feedback-no" class="btn-feedback btn-feedback-no">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: middle;"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm12-3h3a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-3"/></svg>
+            No
+          </button>
+        </div>
+
+        <!-- Dynamic Size Selection Grid (hidden by default) -->
+        <div id="feedback-sizes-container" class="feedback-sizes-container hidden">
+          <p class="feedback-instruction">Tap your correct bangle size:</p>
+          <div class="size-selection-grid">
+            <button class="btn-feedback-circle" data-size="2.2">2.2</button>
+            <button class="btn-feedback-circle" data-size="2.4">2.4</button>
+            <button class="btn-feedback-circle" data-size="2.6">2.6</button>
+            <button class="btn-feedback-circle" data-size="2.8">2.8</button>
+            <button class="btn-feedback-circle" data-size="2.10">2.10</button>
+          </div>
+        </div>
+
+        <!-- Confirmation message -->
+        <div id="feedback-success-msg" class="feedback-success-msg hidden">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: middle;"><polyline points="20 6 9 17 4 12"/></svg>
+          Sizer calibrated successfully!
         </div>
       </div>
 
@@ -1084,6 +1220,8 @@
     
     const kalmanFilter = new KnuckleKalmanFilter();
     let smoothedKnuckleWidth = 60.0;
+    let calibrationScale = parseFloat(localStorage.getItem('bangle_sizer_calibration_scale')) || 1.0;
+    let lastUncalibratedSmoothedWidth = 60.0;
     let lastValidHandPositions = null; // Stores [{x_view, y_view, z_view}, ...] for rendering bangle circles
     
     // Debug Logging Trackers
@@ -1133,6 +1271,47 @@
             selectBangleSize(sz.size);
           });
         }
+      });
+
+      // Feedback button Yes click handler
+      document.getElementById('btn-feedback-yes').addEventListener('click', () => {
+        localStorage.setItem('bangle_sizer_calibration_scale', calibrationScale.toString());
+        console.log(`Feedback confirmed: Bangle size correct. Calibration scale: ${calibrationScale.toFixed(4)}`);
+        
+        document.querySelector('.feedback-buttons-row').classList.add('hidden');
+        document.getElementById('feedback-success-msg').classList.remove('hidden');
+      });
+
+      // Feedback button No click handler
+      document.getElementById('btn-feedback-no').addEventListener('click', () => {
+        document.querySelector('.feedback-buttons-row').classList.add('hidden');
+        document.getElementById('feedback-sizes-container').classList.remove('hidden');
+      });
+
+      // Interactive feedback size pills (circle buttons) click handler
+      const sizePills = document.querySelectorAll('.btn-feedback-circle');
+      sizePills.forEach(pill => {
+        pill.addEventListener('click', (e) => {
+          const correctSize = e.target.getAttribute('data-size');
+          const recommendation = BANGLE_SIZES.find(sz => sz.size === correctSize);
+          if (!recommendation) return;
+
+          const targetWidth = recommendation.diameterMM + 2.0;
+          if (lastUncalibratedSmoothedWidth > 10.0) {
+            const newScale = targetWidth / lastUncalibratedSmoothedWidth;
+            calibrationScale = newScale;
+            localStorage.setItem('bangle_sizer_calibration_scale', newScale.toString());
+            console.log(`Feedback corrected: target size ${correctSize} (${targetWidth.toFixed(1)}mm). New calibration scale: ${newScale.toFixed(4)}`);
+          }
+
+          sizePills.forEach(p => p.classList.remove('selected'));
+          e.target.classList.add('selected');
+
+          selectBangleSize(correctSize);
+
+          document.getElementById('feedback-sizes-container').classList.add('hidden');
+          document.getElementById('feedback-success-msg').classList.remove('hidden');
+        });
       });
       
       // Initialize drawing layer canvas sizes
@@ -1280,6 +1459,17 @@
       if (resultModal) {
         resultModal.classList.add('hidden');
       }
+      
+      // Reset feedback UI panel elements
+      const feedbackButtonsRow = document.querySelector('.feedback-buttons-row');
+      const feedbackSizesContainer = document.getElementById('feedback-sizes-container');
+      const feedbackSuccessMsg = document.getElementById('feedback-success-msg');
+      const sizePills = document.querySelectorAll('.btn-feedback-circle');
+
+      if (feedbackButtonsRow) feedbackButtonsRow.classList.remove('hidden');
+      if (feedbackSizesContainer) feedbackSizesContainer.classList.add('hidden');
+      if (feedbackSuccessMsg) feedbackSuccessMsg.classList.add('hidden');
+      if (sizePills) sizePills.forEach(p => p.classList.remove('selected'));
     }
 
     let currentSlide = 0;
@@ -1716,6 +1906,31 @@
       return [x, y, z];
     }
 
+    function getFilteredDepth(depthInfo, u, v) {
+      const windowSize = 2; // 5x5 window
+      const delta = 0.006;
+      let depthValues = [];
+
+      for (let dy = -windowSize; dy <= windowSize; dy++) {
+        for (let dx = -windowSize; dx <= windowSize; dx++) {
+          const nu = Math.max(0.001, Math.min(0.999, u + dx * delta));
+          const nv = Math.max(0.001, Math.min(0.999, v + dy * delta));
+          try {
+            const val = depthInfo.getDepthInMeters(nu, nv);
+            if (val > 0.05 && val < 2.0) {
+              depthValues.push(val);
+            }
+          } catch (e) {
+            // Out of bounds
+          }
+        }
+      }
+
+      if (depthValues.length === 0) return 0;
+      depthValues.sort((a, b) => a - b);
+      return depthValues[Math.floor(depthValues.length / 2)];
+    }
+
     function calculateDistance(p1, p2) {
       return Math.sqrt(
         Math.pow(p1[0] - p2[0], 2) +
@@ -1744,16 +1959,16 @@
       const u17 = clampVal(lm17.x);
       const v17 = clampVal(lm17.y);
 
-      // Query raw depth buffer values in meters at these screen coords
+      // Query raw depth buffer values in meters using robust 5x5 median lookup
       let depth5 = 0;
       let depth17 = 0;
       
       try {
-        depth5 = xrDepthInfo.getDepthInMeters(u5, v5);
-        depth17 = xrDepthInfo.getDepthInMeters(u17, v17);
+        depth5 = getFilteredDepth(xrDepthInfo, u5, v5);
+        depth17 = getFilteredDepth(xrDepthInfo, u17, v17);
         if (!depthFirstResolved && (depth5 > 0 || depth17 > 0)) {
           depthFirstResolved = true;
-          console.log("SUCCESS: Resolved depth from WebXR. depth5: " + depth5.toFixed(3) + "m, depth17: " + depth17.toFixed(3) + "m");
+          console.log("SUCCESS: Resolved depth from WebXR (median filter). depth5: " + depth5.toFixed(3) + "m, depth17: " + depth17.toFixed(3) + "m");
         }
       } catch (e) {
         console.error("CRITICAL: Depth sensing lookup failed with error:", e);
@@ -1800,9 +2015,16 @@
         return;
       }
 
+      // Apply calibration scale factor from local storage
+      const calibratedWidth = rawWidthMM * calibrationScale;
+
       // Apply Kalman filter smoothing
-      smoothedKnuckleWidth = kalmanFilter.update(rawWidthMM);
-      const variance = Math.abs(rawWidthMM - smoothedKnuckleWidth);
+      smoothedKnuckleWidth = kalmanFilter.update(calibratedWidth);
+      
+      // Store uncalibrated smoothed width for calculation in size correction feedback
+      lastUncalibratedSmoothedWidth = smoothedKnuckleWidth / calibrationScale;
+      
+      const variance = Math.abs(calibratedWidth - smoothedKnuckleWidth);
 
       // Safeguard 5: Check stability (variance < 1.5mm allows normal camera noise and hand micro-shakes)
       if (variance < 1.5) {
@@ -1832,7 +2054,7 @@
         drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
         updateHUD(
           "Unstable", 
-          `${rawWidthMM.toFixed(1)} mm`, 
+          `${calibratedWidth.toFixed(1)} mm`, 
           getProgressPct(), 
           "⚠️ Movement detected. Hold hand completely still!", 
           true
