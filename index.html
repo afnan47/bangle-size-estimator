@@ -323,6 +323,16 @@
       pointer-events: none;
     }
 
+    #webcam-video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+
     /* HUD Controls (Overlay on AR) */
     .ar-hud {
       position: absolute;
@@ -781,6 +791,21 @@
       from { transform: scale(0.92); opacity: 0; }
       to { transform: scale(1); opacity: 1; }
     }
+
+    /* PC Camera-less simulation background */
+    .simulated-bg {
+      background: radial-gradient(circle at center, rgba(6, 182, 212, 0.12), var(--bg-dark) 80%),
+                  linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px) !important;
+      background-size: 100% 100%, 40px 40px, 40px 40px !important;
+      background-position: center, center, center !important;
+      animation: scanGrid 12s linear infinite !important;
+    }
+
+    @keyframes scanGrid {
+      from { background-position: center, 0px 0px, 0px 0px; }
+      to { background-position: center, 40px 40px, 40px 40px; }
+    }
   </style>
 </head>
 <body>
@@ -866,6 +891,8 @@
 
   <!-- 2. AR VIEW CONTAINER -->
   <main id="ar-container" style="display: none;">
+    <!-- Video element for standard PC webcam demo fallback -->
+    <video id="webcam-video" autoplay playsinline style="display: none;"></video>
     <!-- WebGL Rendering context for WebXR Depth layers -->
     <canvas id="webgl-canvas"></canvas>
     <!-- Overlay canvas for skeleton tracking, projected bangle overlays, and stats -->
@@ -1015,6 +1042,26 @@
       <button id="btn-error-close" class="btn" style="background: rgba(255,255,255,0.08); color: var(--text-primary); border: 1px solid var(--border-color); box-shadow: none;">Back to Instructions</button>
     </div>
   </section>
+
+  <!-- Simulate Scan Button (PC Test Only) -->
+  <button id="btn-simulate-scan" style="
+    position: fixed;
+    top: 12px;
+    right: 140px;
+    z-index: 999999;
+    background: rgba(17, 24, 39, 0.85);
+    border: 1px solid var(--border-color);
+    color: var(--state-success);
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    pointer-events: auto;
+    display: none;
+  ">Simulate Scan (PC Test)</button>
 
   <!-- Floating Debug Button -->
   <button id="btn-toggle-debug" style="
@@ -1222,7 +1269,16 @@
     let smoothedKnuckleWidth = 60.0;
     let calibrationScale = parseFloat(localStorage.getItem('bangle_sizer_calibration_scale')) || 1.0;
     let lastUncalibratedSmoothedWidth = 60.0;
+    let isWebcamDemo = false;
+    let webcamStream = null;
     let lastValidHandPositions = null; // Stores [{x_view, y_view, z_view}, ...] for rendering bangle circles
+
+    // PC UI/UX Test Simulation parameters
+    let isNoCameraSim = false;
+    let isSimulatingScan = false;
+    let simProgressFrame = 0;
+    const SIM_TOTAL_FRAMES = 45;
+    let simIntervalId = null;
     
     // Debug Logging Trackers
     let frameCount = 0;
@@ -1318,7 +1374,19 @@
       overlayCanvas = document.getElementById('overlay-canvas');
       overlayCtx = overlayCanvas.getContext('2d');
       window.addEventListener('resize', resizeOverlayCanvas);
+
+      // Simulate Scan button listener (PC Test mode)
+      const simBtn = document.getElementById('btn-simulate-scan');
+      if (simBtn) {
+        simBtn.addEventListener('click', startSimulatedScan);
+      }
     });
+
+    function isLocalTest() {
+      return window.location.hostname === 'localhost' || 
+             window.location.hostname === '127.0.0.1' || 
+             window.location.search.includes('test=true');
+    }
 
     function resizeOverlayCanvas() {
       if (overlayCanvas) {
@@ -1362,14 +1430,18 @@
     // WEBXR & GL RUNTIME INITIALIZATION
     // ------------------------------------------------------------------------
     async function startAR() {
-      if (!navigator.xr) {
-        showUIError("AR Unsupported", "WebXR device API is not supported on this browser.");
-        return;
+      let supported = false;
+      if (navigator.xr) {
+        try {
+          supported = await navigator.xr.isSessionSupported('immersive-ar');
+        } catch (e) {
+          supported = false;
+        }
       }
 
-      const supported = await navigator.xr.isSessionSupported('immersive-ar');
       if (!supported) {
-        showUIError("AR Unsupported", "Immersive augmented reality (AR) is not supported on this device.");
+        console.warn("WebXR immersive-ar is not supported. Attempting PC Webcam Demo Mode fallback...");
+        startWebcamDemo();
         return;
       }
 
@@ -1432,12 +1504,133 @@
 
       } catch (err) {
         console.error("CRITICAL: startAR failed with error:", err);
-        showUIError("AR Session Failed", "Initialization of AR camera loop failed: " + err.message);
+        console.warn("Attempting PC Webcam Demo fallback due to WebXR session error...");
+        startWebcamDemo();
       }
     }
 
+    async function startWebcamDemo() {
+      isWebcamDemo = true;
+      console.log("Initializing PC Webcam Demo Mode...");
+      
+      const video = document.getElementById('webcam-video');
+      if (!video) {
+        showUIError("Demo Failed", "Webcam video element was not found.");
+        return;
+      }
+
+      try {
+        webcamStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: "user",
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          }
+        });
+        video.srcObject = webcamStream;
+        video.style.display = 'block';
+        
+        // Wait for video to load metadata
+        await new Promise((resolve) => {
+          video.onloadedmetadata = () => {
+            video.play();
+            resolve();
+          };
+        });
+
+        // Hide onboarding, show AR container with video playing behind
+        screenOnboarding.classList.add('hidden');
+        arContainer.style.display = 'block';
+        resizeOverlayCanvas();
+        recalibrate();
+        
+        // Mock a projection matrix for the PC demo view
+        activeProjectionMatrix = [1.29, 0, 0, 0, 0, 1.73, 0, 0, 0, 0, -1, -1, 0, 0, -0.2, 0];
+
+        // Start webcam frame rendering loop
+        console.log("Launching Webcam Frame Loop...");
+        requestAnimationFrame(onWebcamFrame);
+
+        // Show simulate scan button in local test environment
+        if (isLocalTest()) {
+          const simBtn = document.getElementById('btn-simulate-scan');
+          if (simBtn) simBtn.style.display = 'block';
+        }
+
+      } catch (err) {
+        console.error("Webcam access failed:", err);
+        if (isLocalTest()) {
+          console.warn("Falling back to camera-less simulation mode for local testing...");
+          startNoCameraSimulation();
+        } else {
+          showUIError("Camera Access Required", "Failed to access webcam for sizer demo: " + err.message);
+        }
+      }
+    }
+
+    function onWebcamFrame() {
+      if (!isWebcamDemo || !webcamStream) return;
+      frameCount++;
+
+      const video = document.getElementById('webcam-video');
+      if (video && video.readyState === video.HAVE_ENOUGH_DATA) {
+        // Clear WebGL canvas if it exists
+        if (gl) {
+          gl.clearColor(0, 0, 0, 0);
+          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        }
+
+        // Draw overlay guides and process hand landmarks
+        if (calibrationLocked) {
+          drawBangleStaticOverlay();
+        } else if (isSimulatingScan) {
+          drawSimulatedFrame();
+        } else if (!isProcessingHand) {
+          isProcessingHand = true;
+          handsDetector.send({ image: video }).finally(() => {
+            isProcessingHand = false;
+          });
+        }
+      }
+
+      requestAnimationFrame(onWebcamFrame);
+    }
+
     function stopAR() {
-      if (xrSession) {
+      // Clear simulation states
+      isNoCameraSim = false;
+      isSimulatingScan = false;
+      if (simIntervalId) {
+        clearInterval(simIntervalId);
+        simIntervalId = null;
+      }
+      const simBtn = document.getElementById('btn-simulate-scan');
+      if (simBtn) {
+        simBtn.style.display = 'none';
+        simBtn.disabled = false;
+        simBtn.textContent = "Simulate Scan (PC Test)";
+        simBtn.style.opacity = '1';
+      }
+      const container = document.getElementById('ar-container');
+      if (container) {
+        container.classList.remove('simulated-bg');
+      }
+
+      if (isWebcamDemo) {
+        isWebcamDemo = false;
+        if (webcamStream) {
+          webcamStream.getTracks().forEach(track => track.stop());
+          webcamStream = null;
+        }
+        const video = document.getElementById('webcam-video');
+        if (video) {
+          video.pause();
+          video.srcObject = null;
+          video.style.display = 'none';
+        }
+        arContainer.style.display = 'none';
+        screenOnboarding.classList.remove('hidden');
+      } else if (xrSession) {
         xrSession.end().then(() => {
           xrSession = null;
           arContainer.style.display = 'none';
@@ -1460,6 +1653,23 @@
         resultModal.classList.add('hidden');
       }
       
+      // Reset simulation states
+      isSimulatingScan = false;
+      if (simIntervalId) {
+        clearInterval(simIntervalId);
+        simIntervalId = null;
+      }
+
+      if (isLocalTest() && isWebcamDemo) {
+        const simBtn = document.getElementById('btn-simulate-scan');
+        if (simBtn) {
+          simBtn.style.display = 'block';
+          simBtn.disabled = false;
+          simBtn.textContent = "Simulate Scan (PC Test)";
+          simBtn.style.opacity = '1';
+        }
+      }
+      
       // Reset feedback UI panel elements
       const feedbackButtonsRow = document.querySelector('.feedback-buttons-row');
       const feedbackSizesContainer = document.getElementById('feedback-sizes-container');
@@ -1470,6 +1680,171 @@
       if (feedbackSizesContainer) feedbackSizesContainer.classList.add('hidden');
       if (feedbackSuccessMsg) feedbackSuccessMsg.classList.add('hidden');
       if (sizePills) sizePills.forEach(p => p.classList.remove('selected'));
+    }
+
+    // ------------------------------------------------------------------------
+    // PC UI/UX TEST SIMULATION ENGINES
+    // ------------------------------------------------------------------------
+    function startNoCameraSimulation() {
+      isWebcamDemo = true;
+      isNoCameraSim = true;
+      console.log("Initializing PC Camera-less Simulation Mode...");
+      
+      const container = document.getElementById('ar-container');
+      if (container) {
+        container.classList.add('simulated-bg');
+      }
+
+      // Hide onboarding, show AR container
+      screenOnboarding.classList.add('hidden');
+      arContainer.style.display = 'block';
+      resizeOverlayCanvas();
+      recalibrate();
+      
+      // Mock projection matrix
+      activeProjectionMatrix = [1.29, 0, 0, 0, 0, 1.73, 0, 0, 0, 0, -1, -1, 0, 0, -0.2, 0];
+
+      // Show simulate scan button
+      const simBtn = document.getElementById('btn-simulate-scan');
+      if (simBtn) simBtn.style.display = 'block';
+
+      // Start rendering loop for camera-less simulation view
+      console.log("Launching Camera-less Frame Loop...");
+      requestAnimationFrame(onNoCameraFrame);
+    }
+
+    function onNoCameraFrame() {
+      if (!isNoCameraSim) return;
+      frameCount++;
+
+      // Clear overlay canvas
+      if (overlayCtx && overlayCanvas) {
+        overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+      }
+
+      if (calibrationLocked) {
+        drawBangleStaticOverlay();
+      } else {
+        if (!isSimulatingScan) {
+          // Draw dashed guide stencil
+          if (overlayCtx && overlayCanvas) {
+            drawHandStencil(overlayCtx, overlayCanvas.width, overlayCanvas.height);
+          }
+        } else {
+          drawSimulatedFrame();
+        }
+      }
+
+      requestAnimationFrame(onNoCameraFrame);
+    }
+
+    function startSimulatedScan() {
+      if (isSimulatingScan) return;
+      isSimulatingScan = true;
+      simProgressFrame = 0;
+      stableMeasurementCount = 0;
+      kalmanFilter.reset(60.0);
+      
+      const simBtn = document.getElementById('btn-simulate-scan');
+      if (simBtn) {
+        simBtn.disabled = true;
+        simBtn.textContent = "Scanning...";
+        simBtn.style.opacity = '0.5';
+      }
+
+      console.log("PC Simulation Scan initiated.");
+
+      // Sim tick interval (runs ~30 FPS, so 33ms per step)
+      simIntervalId = setInterval(tickSimulatedScan, 33);
+    }
+
+    function tickSimulatedScan() {
+      if (!isSimulatingScan) {
+        clearInterval(simIntervalId);
+        return;
+      }
+
+      simProgressFrame++;
+      stableMeasurementCount = simProgressFrame;
+      const progressPct = Math.round((simProgressFrame / SIM_TOTAL_FRAMES) * 100);
+
+      // Generate a fluctuating simulated width around 60.3mm (which corresponds to size 2.6)
+      const baseWidth = 60.3;
+      const noise = (Math.random() - 0.5) * 0.4;
+      const rawWidthMM = baseWidth + noise;
+      const calibratedWidth = rawWidthMM * calibrationScale;
+      smoothedKnuckleWidth = kalmanFilter.update(calibratedWidth);
+      lastUncalibratedSmoothedWidth = smoothedKnuckleWidth / calibrationScale;
+
+      // Update HUD
+      updateHUD(
+        "Calibrating", 
+        `${smoothedKnuckleWidth.toFixed(1)} mm`, 
+        progressPct, 
+        "Hold perfectly still. Calibrating..."
+      );
+
+      // Generate simulated hand positions centered on screen
+      const w = overlayCanvas.width;
+      const h = overlayCanvas.height;
+      const centerX = w / 2;
+      const centerY = h / 2 + h * 0.03;
+      const scale = Math.min(w, h) * 0.36;
+
+      // Knuckles 5 and 17 coordinates in normalized view space
+      const lm5 = { x: (centerX - scale * 0.18) / w, y: centerY / h };
+      const lm17 = { x: (centerX + scale * 0.18) / w, y: centerY / h };
+
+      // Mock 3D coordinates in meters at simulated depth
+      const depthVal = 0.4; // 40 cm away
+      const p5_3d = unproject(lm5, depthVal, activeProjectionMatrix);
+      const p17_3d = unproject(lm17, depthVal, activeProjectionMatrix);
+
+      // Store in global hand positions for bangle overlay rendering
+      lastValidHandPositions = { p5: p5_3d, p17: p17_3d };
+
+      if (simProgressFrame >= SIM_TOTAL_FRAMES) {
+        isSimulatingScan = false;
+        clearInterval(simIntervalId);
+        
+        const simBtn = document.getElementById('btn-simulate-scan');
+        if (simBtn) {
+          simBtn.disabled = false;
+          simBtn.textContent = "Simulate Scan (PC Test)";
+          simBtn.style.opacity = '1';
+          simBtn.style.display = 'none'; // Hide once locked
+        }
+
+        lockCalibration(smoothedKnuckleWidth);
+      }
+    }
+
+    function drawSimulatedFrame() {
+      const w = overlayCanvas.width;
+      const h = overlayCanvas.height;
+      const centerX = w / 2;
+      const centerY = h / 2 + h * 0.03;
+      const scale = Math.min(w, h) * 0.36;
+
+      // Mock landmarks array for wireframe drawing
+      const mockLandmarks = [
+        { x: centerX / w, y: (centerY + scale * 0.5) / h }, // wrist
+        null, null, null, null,
+        { x: (centerX - scale * 0.18) / w, y: centerY / h }, // knuckle 5 (index)
+        null, null, null, null, null, null, null, null, null, null, null,
+        { x: (centerX + scale * 0.18) / w, y: centerY / h }  // knuckle 17 (pinky)
+      ];
+
+      // Draw hand wireframe and projected circle
+      const progressFraction = simProgressFrame / SIM_TOTAL_FRAMES;
+      drawHandWireframe(mockLandmarks, true, progressFraction);
+      if (lastValidHandPositions) {
+        drawProjectedBangleOverlay(
+          lastValidHandPositions.p5,
+          lastValidHandPositions.p17,
+          smoothedKnuckleWidth
+        );
+      }
     }
 
     let currentSlide = 0;
@@ -1959,19 +2334,30 @@
       const u17 = clampVal(lm17.x);
       const v17 = clampVal(lm17.y);
 
-      // Query raw depth buffer values in meters using robust 5x5 median lookup
+      // Query depth values (simulated in demo mode, query sensor in WebXR)
       let depth5 = 0;
       let depth17 = 0;
       
-      try {
-        depth5 = getFilteredDepth(xrDepthInfo, u5, v5);
-        depth17 = getFilteredDepth(xrDepthInfo, u17, v17);
-        if (!depthFirstResolved && (depth5 > 0 || depth17 > 0)) {
-          depthFirstResolved = true;
-          console.log("SUCCESS: Resolved depth from WebXR (median filter). depth5: " + depth5.toFixed(3) + "m, depth17: " + depth17.toFixed(3) + "m");
+      if (isWebcamDemo) {
+        // Calculate normalized pixel distance between joints 5 and 17
+        const dx = lm5.x - lm17.x;
+        const dy = lm5.y - lm17.y;
+        const distPixels = Math.sqrt(dx * dx + dy * dy);
+        
+        // Simulates typical knuckle span of 6.2cm (size 2.6) at current distance
+        const simulatedDepth = (0.0625 * 1.29) / (2.0 * Math.max(0.01, distPixels));
+        depth5 = depth17 = Math.max(0.20, Math.min(1.0, simulatedDepth));
+      } else {
+        try {
+          depth5 = getFilteredDepth(xrDepthInfo, u5, v5);
+          depth17 = getFilteredDepth(xrDepthInfo, u17, v17);
+          if (!depthFirstResolved && (depth5 > 0 || depth17 > 0)) {
+            depthFirstResolved = true;
+            console.log("SUCCESS: Resolved depth from WebXR (median filter). depth5: " + depth5.toFixed(3) + "m, depth17: " + depth17.toFixed(3) + "m");
+          }
+        } catch (e) {
+          console.error("CRITICAL: Depth sensing lookup failed with error:", e);
         }
-      } catch (e) {
-        console.error("CRITICAL: Depth sensing lookup failed with error:", e);
       }
 
       const getProgressPct = () => Math.round((stableMeasurementCount / REQUIRED_STABLE_FRAMES) * 100);
