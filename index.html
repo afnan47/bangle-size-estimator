@@ -926,7 +926,7 @@
       <div class="hud-card">
         <div class="hud-status-row">
           <span id="badge-status" class="status-badge searching">Searching...</span>
-          <span id="live-width" class="live-width-val">--.- mm</span>
+          <span id="live-width" class="live-width-val">-.- cm</span>
         </div>
         
         <!-- Stability Progress Bar -->
@@ -975,12 +975,12 @@
       <!-- Sizing Details -->
       <div class="size-detail-row">
         <div class="detail-item">
-          <h5>Knuckle Width</h5>
-          <p id="result-width-mm">60.3 mm</p>
+          <h5>Knuckle Width (cm)</h5>
+          <p id="result-width-mm">6.03 cm</p>
         </div>
         <div class="detail-item">
           <h5>Bangle ID (Inner)</h5>
-          <p id="result-diameter-mm">60.3 mm</p>
+          <p id="result-diameter-mm">6.03 cm</p>
         </div>
       </div>
 
@@ -1097,6 +1097,7 @@
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     pointer-events: auto;
+    display: none;
   ">Debug Console</button>
 
   <!-- Debug Console Overlay -->
@@ -1406,6 +1407,12 @@
       if (simBtn) {
         simBtn.addEventListener('click', startSimulatedScan);
       }
+
+      // Show debug console button only on local test environment
+      if (isLocalTest()) {
+        const debugBtn = document.getElementById('btn-toggle-debug');
+        if (debugBtn) debugBtn.style.display = 'block';
+      }
     });
 
     function isLocalTest() {
@@ -1674,7 +1681,7 @@
       if (overlayCtx && overlayCanvas) {
         overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
       }
-      updateHUD("Searching...", "--.- mm", 0, "Fit your knuckles (index to pinky base) inside the frame");
+      updateHUD("Searching...", "-.- cm", 0, "Fit your knuckles (index to pinky base) inside the frame");
       if (resultModal) {
         resultModal.classList.add('hidden');
       }
@@ -1807,7 +1814,7 @@
       // Update HUD
       updateHUD(
         "Calibrating", 
-        `${smoothedKnuckleWidth.toFixed(1)} mm`, 
+        `${(smoothedKnuckleWidth / 10).toFixed(2)} cm`, 
         progressPct, 
         "Hold perfectly still. Calibrating..."
       );
@@ -1920,8 +1927,8 @@
       
       document.getElementById('result-size-label').textContent = recommendation.size;
       const estimatedWidth = recommendation.diameterMM + 2.0;
-      document.getElementById('result-width-mm').textContent = `${estimatedWidth.toFixed(1)} mm`;
-      document.getElementById('result-diameter-mm').textContent = `${recommendation.diameterMM.toFixed(1)} mm`;
+      document.getElementById('result-width-mm').textContent = `${(estimatedWidth / 10).toFixed(2)} cm`;
+      document.getElementById('result-diameter-mm').textContent = `${(recommendation.diameterMM / 10).toFixed(2)} cm`;
       
       const rulerMarker = document.getElementById('result-ruler-marker');
       if (rulerMarker) {
@@ -2270,7 +2277,7 @@
         // Reset calibration progress if hand is lost
         stableMeasurementCount = Math.max(0, stableMeasurementCount - 2); 
         const progress = Math.round((stableMeasurementCount / REQUIRED_STABLE_FRAMES) * 100);
-        updateHUD("Searching...", "--.- mm", progress, "Point camera at hand. Squeeze your knuckles tight.");
+        updateHUD("Searching...", "-.- cm", progress, "Point camera at hand. Squeeze your knuckles tight.");
         
         // Draw dashed hand silhouette stencil to guide the user placement
         if (overlayCtx && overlayCanvas) {
@@ -2347,7 +2354,7 @@
     // ------------------------------------------------------------------------
     function processHandLandmarks(landmarks) {
       if (!xrDepthInfo) {
-        updateHUD("Searching...", "--.- mm", 0, "Initializing depth engine... hold phone steady.");
+        updateHUD("Searching...", "-.- cm", 0, "Initializing depth engine... hold phone steady.");
         return;
       }
 
@@ -2394,7 +2401,7 @@
       if (depth5 <= 0.15 || depth17 <= 0.15) {
         stableMeasurementCount = Math.max(0, stableMeasurementCount - 1);
         drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
-        updateHUD("Unstable", "--.- mm", getProgressPct(), "⚠️ Move hand further away (10-15 inches is ideal)", true);
+        updateHUD("Unstable", "-.- cm", getProgressPct(), "⚠️ Move hand further away (10-15 inches is ideal)", true);
         return;
       }
 
@@ -2402,7 +2409,7 @@
       if (depth5 > 1.0 || depth17 > 1.0) {
         stableMeasurementCount = Math.max(0, stableMeasurementCount - 1);
         drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
-        updateHUD("Unstable", "--.- mm", getProgressPct(), "⚠️ Move hand closer to the camera (under 3 feet)", true);
+        updateHUD("Unstable", "-.- cm", getProgressPct(), "⚠️ Move hand closer to the camera (under 3 feet)", true);
         return;
       }
 
@@ -2410,7 +2417,7 @@
       if (Math.abs(depth5 - depth17) > 0.08) {
         stableMeasurementCount = Math.max(0, stableMeasurementCount - 1);
         drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
-        updateHUD("Unstable", "--.- mm", getProgressPct(), "⚠️ Keep hand flat. Do not tilt your hand.", true);
+        updateHUD("Unstable", "-.- cm", getProgressPct(), "⚠️ Keep hand flat. Do not tilt your hand.", true);
         return;
       }
 
@@ -2425,7 +2432,7 @@
       if (rawWidthMM < 42 || rawWidthMM > 88) {
         stableMeasurementCount = Math.max(0, stableMeasurementCount - 1);
         drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
-        updateHUD("Unstable", "--.- mm", getProgressPct(), "⚠️ Knuckles misaligned. Squeeze hand tightly.", true);
+        updateHUD("Unstable", "-.- cm", getProgressPct(), "⚠️ Knuckles misaligned. Squeeze hand tightly.", true);
         return;
       }
 
@@ -2451,7 +2458,7 @@
         
         updateHUD(
           "Calibrating", 
-          `${smoothedKnuckleWidth.toFixed(1)} mm`, 
+          `${(smoothedKnuckleWidth / 10).toFixed(2)} cm`, 
           getProgressPct(), 
           "Hold perfectly still. Calibrating..."
         );
@@ -2468,7 +2475,7 @@
         drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
         updateHUD(
           "Unstable", 
-          `${calibratedWidth.toFixed(1)} mm`, 
+          `${(calibratedWidth / 10).toFixed(2)} cm`, 
           getProgressPct(), 
           "⚠️ Movement detected. Hold hand completely still!", 
           true
@@ -2478,7 +2485,7 @@
 
     function lockCalibration(finalKnuckleWidth) {
       calibrationLocked = true;
-      updateHUD("Success", `${finalKnuckleWidth.toFixed(1)} mm`, 100, "Measurement Locked!");
+      updateHUD("Success", `${(finalKnuckleWidth / 10).toFixed(2)} cm`, 100, "Measurement Locked!");
 
       // Recommend Bangle size
       const recommendation = getRecommendedBangleSize(finalKnuckleWidth);
@@ -2487,7 +2494,7 @@
       setTimeout(() => {
         selectBangleSize(recommendation.size);
         // Display actual measured knuckle width
-        document.getElementById('result-width-mm').textContent = `${finalKnuckleWidth.toFixed(1)} mm`;
+        document.getElementById('result-width-mm').textContent = `${(finalKnuckleWidth / 10).toFixed(2)} cm`;
         
         resultModal.classList.remove('hidden');
       }, 500);
