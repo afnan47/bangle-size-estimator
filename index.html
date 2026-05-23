@@ -170,6 +170,91 @@
       font-size: 0.85rem;
       color: var(--text-secondary);
       line-height: 1.4;
+    }    /* Carousel Onboarding styles */
+    .carousel-card {
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 16px 16px;
+    }
+    .carousel-track-container {
+      width: 100%;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .carousel-track {
+      display: flex;
+      width: 300%; /* 3 slides */
+      transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    .carousel-slide {
+      width: 33.333%;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 0 16px;
+    }
+    .slide-illustration {
+      width: 130px;
+      height: 130px;
+      margin-bottom: 20px;
+      background: rgba(255, 255, 255, 0.015);
+      border: 1px solid var(--border-color);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      box-shadow: inset 0 4px 20px rgba(0,0,0,0.15);
+    }
+    .ux-illustration {
+      width: 90px;
+      height: 90px;
+      filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.35));
+    }
+    .slide-title {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    .slide-desc {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+    .carousel-nav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .carousel-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .carousel-dot.active {
+      width: 24px;
+      border-radius: 4px;
+      background: var(--accent-cyan);
+    }
+    .carousel-actions {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+    .btn-carousel {
+      width: 100%;
+      max-width: 280px;
     }
 
     .btn {
@@ -452,6 +537,7 @@
       width: 100%;
       height: 100%;
       transform: rotate(-90deg);
+      transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
     .size-label-large {
@@ -515,13 +601,24 @@
     }
 
     .ruler-tick {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       font-weight: 600;
       color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .ruler-tick:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.05);
     }
 
     .ruler-tick.highlighted {
       color: var(--accent-cyan);
+      background: rgba(6, 182, 212, 0.1);
+      box-shadow: 0 0 8px rgba(6, 182, 212, 0.15);
     }
 
     .ruler-marker {
@@ -533,7 +630,7 @@
       border-radius: 4px;
       box-shadow: 0 0 10px var(--accent-cyan);
       transform: translateX(-50%);
-      transition: left 0.5s ease-in-out;
+      transition: left 0.3s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
     /* Error Overlay */
@@ -592,43 +689,72 @@
       <p class="brand-tagline">Find the right bangle size for you</p>
     </div>
 
-    <!-- Instructions Card -->
-    <div class="card">
-      <h2 class="card-title">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-        Measurement Guide
-      </h2>
+    <!-- Instructions Carousel Card -->
+    <div class="card carousel-card">
+      <div class="carousel-track-container">
+        <div class="carousel-track" id="carousel-track">
+          
+          <!-- Slide 1: Squeeze Hand -->
+          <div class="carousel-slide" data-index="0">
+            <div class="slide-illustration">
+              <svg class="ux-illustration" viewBox="0 0 100 100">
+                <path d="M50 82 C38 82, 25 72, 25 50 C25 38, 30 28, 40 24 C41 23, 42 25, 41 27 C37 36, 38 48, 45 52 C50 55, 54 48, 54 40 C54 25, 47 15, 60 15 C70 15, 75 28, 75 42 C75 60, 62 82, 50 82 Z" fill="none" stroke="url(#cyan-blue-grad)" stroke-width="3" stroke-linecap="round" />
+                <path d="M15 50 Q10 40 18 32" fill="none" stroke="#22d3ee" stroke-width="2" marker-end="url(#arrow)" />
+                <path d="M85 50 Q90 40 82 32" fill="none" stroke="#22d3ee" stroke-width="2" marker-end="url(#arrow)" />
+                <defs>
+                  <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#22d3ee"/>
+                  </marker>
+                </defs>
+              </svg>
+            </div>
+            <h3 class="slide-title">1. Squeeze Hand Tightly</h3>
+            <p class="slide-desc">Tuck your thumb inward toward your palm, squeezing your knuckles as if sliding a real bangle on.</p>
+          </div>
+
+          <!-- Slide 2: Lay Flat -->
+          <div class="carousel-slide" data-index="1">
+            <div class="slide-illustration">
+              <svg class="ux-illustration" viewBox="0 0 100 100">
+                <line x1="10" y1="80" x2="90" y2="80" stroke="rgba(255,255,255,0.2)" stroke-width="3" stroke-linecap="round" />
+                <path d="M20 72 Q32 52 46 52 Q58 52 68 64 L82 66 L82 80 L18 80 Z" fill="none" stroke="url(#cyan-blue-grad)" stroke-width="3" stroke-linecap="round" />
+                <path d="M46 45 L46 25" fill="none" stroke="#22d3ee" stroke-width="2" stroke-dasharray="3,3" />
+                <circle cx="46" cy="22" r="4" fill="#22d3ee" />
+              </svg>
+            </div>
+            <h3 class="slide-title">2. Keep Hand Flat & Still</h3>
+            <p class="slide-desc">Place your hand flat on a table in a well-lit area. Avoid tilting your palm to ensure accurate depth mapping.</p>
+          </div>
+
+          <!-- Slide 3: Level Camera -->
+          <div class="carousel-slide" data-index="2">
+            <div class="slide-illustration">
+              <svg class="ux-illustration" viewBox="0 0 100 100">
+                <path d="M30 80 Q50 68 70 80" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="3" stroke-linecap="round" />
+                <rect x="25" y="20" width="50" height="25" rx="5" fill="none" stroke="url(#cyan-blue-grad)" stroke-width="3" />
+                <line x1="50" y1="18" x2="50" y2="22" stroke="rgba(255,255,255,0.5)" stroke-width="2" />
+                <line x1="28" y1="48" x2="33" y2="76" stroke="#22d3ee" stroke-width="1.5" stroke-dasharray="2,2" />
+                <line x1="72" y1="48" x2="67" y2="76" stroke="#22d3ee" stroke-width="1.5" stroke-dasharray="2,2" />
+              </svg>
+            </div>
+            <h3 class="slide-title">3. Level Phone Directly Above</h3>
+            <p class="slide-desc">Hover your phone parallel to your hand. Keep the camera stationary for 1.5 seconds to calibrate and lock the size.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Carousel Navigation Dots -->
+      <div class="carousel-nav">
+        <div class="carousel-dot active" data-index="0"></div>
+        <div class="carousel-dot" data-index="1"></div>
+        <div class="carousel-dot" data-index="2"></div>
+      </div>
       
-      <div class="instruction-step">
-        <div class="step-number">1</div>
-        <div class="step-text">
-          <h4>Squeeze Hand Tightly</h4>
-          <p>Tuck your thumb inward toward your palm, squeezing your knuckles as if sliding a real bangle on.</p>
-        </div>
-      </div>
-
-      <div class="instruction-step">
-        <div class="step-number">2</div>
-        <div class="step-text">
-          <h4>Keep Hand Flat & Still</h4>
-          <p>Place your hand flat on a flat surface in a well-lit area. Avoid tilting your palm.</p>
-        </div>
-      </div>
-
-      <div class="instruction-step">
-        <div class="step-number">3</div>
-        <div class="step-text">
-          <h4>Steady Camera Tracking</h4>
-          <p>Hover your phone directly above your knuckles. Keep the sensor stationary for 1.5 seconds to lock the size.</p>
-        </div>
+      <!-- Slide Button controls -->
+      <div class="carousel-actions">
+        <button id="btn-carousel-next" class="btn btn-carousel">Next</button>
       </div>
     </div>
-
-    <!-- Requirements Check / CTA -->
-    <button id="btn-start-ar" class="btn">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
-      Start AR Sizer
-    </button>
     
     <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 16px; max-width: 320px; line-height: 1.4;">
       Requires an Android device with Google Play Services for AR (ARCore) in Google Chrome.
@@ -975,16 +1101,38 @@
     // APPLICATION LIFECYCLE INITIALIZATION
     // ------------------------------------------------------------------------
     document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById('btn-start-ar').addEventListener('click', startAR);
+      initCarousel();
       document.getElementById('btn-exit-ar').addEventListener('click', stopAR);
       document.getElementById('btn-recalibrate').addEventListener('click', recalibrate);
       document.getElementById('btn-close-results').addEventListener('click', () => {
         resultModal.classList.add('hidden');
         screenOnboarding.classList.remove('hidden');
+        // Reset carousel back to slide 0 when exiting results screen
+        currentSlide = 0;
+        const track = document.getElementById('carousel-track');
+        if (track) track.style.transform = `translateX(0%)`;
+        const dots = document.querySelectorAll('.carousel-dot');
+        dots.forEach((dot, idx) => {
+          if (idx === 0) dot.classList.add('active');
+          else dot.classList.remove('active');
+        });
+        const btnNext = document.getElementById('btn-carousel-next');
+        if (btnNext) btnNext.innerHTML = 'Next';
       });
       document.getElementById('btn-error-close').addEventListener('click', () => {
         errorModal.classList.add('hidden');
         screenOnboarding.classList.remove('hidden');
+      });
+
+      // Attach click events to the sizing ruler ticks for interactive preview
+      BANGLE_SIZES.forEach(sz => {
+        const id = `tick-${sz.size.replace('.', '-')}`;
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('click', () => {
+            selectBangleSize(sz.size);
+          });
+        }
       });
       
       // Initialize drawing layer canvas sizes
@@ -1132,6 +1280,145 @@
       if (resultModal) {
         resultModal.classList.add('hidden');
       }
+    }
+
+    let currentSlide = 0;
+    const totalSlides = 3;
+
+    function initCarousel() {
+      const track = document.getElementById('carousel-track');
+      const dots = document.querySelectorAll('.carousel-dot');
+      const btnNext = document.getElementById('btn-carousel-next');
+      if (!track || !btnNext) return;
+
+      btnNext.onclick = () => {
+        if (currentSlide < totalSlides - 1) {
+          currentSlide++;
+          updateCarousel();
+        } else {
+          startAR();
+        }
+      };
+
+      dots.forEach((dot, idx) => {
+        dot.onclick = () => {
+          currentSlide = idx;
+          updateCarousel();
+        };
+      });
+
+      function updateCarousel() {
+        track.style.transform = `translateX(-${(currentSlide * 100) / totalSlides}%)`;
+        dots.forEach((d, idx) => {
+          if (idx === currentSlide) d.classList.add('active');
+          else d.classList.remove('active');
+        });
+
+        if (currentSlide === totalSlides - 1) {
+          btnNext.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg> Start AR Sizer`;
+        } else {
+          btnNext.innerHTML = 'Next';
+        }
+      }
+    }
+
+    function selectBangleSize(sizeStr) {
+      const recommendation = BANGLE_SIZES.find(sz => sz.size === sizeStr) || BANGLE_SIZES[2];
+      
+      document.getElementById('result-size-label').textContent = recommendation.size;
+      const estimatedWidth = recommendation.diameterMM + 2.0;
+      document.getElementById('result-width-mm').textContent = `${estimatedWidth.toFixed(1)} mm`;
+      document.getElementById('result-diameter-mm').textContent = `${recommendation.diameterMM.toFixed(1)} mm`;
+      
+      const rulerMarker = document.getElementById('result-ruler-marker');
+      if (rulerMarker) {
+        rulerMarker.style.left = `${recommendation.positionPct}%`;
+      }
+      
+      BANGLE_SIZES.forEach(sz => {
+        const el = document.getElementById(`tick-${sz.size.replace('.', '-')}`);
+        if (el) {
+          if (sz.size === recommendation.size) {
+            el.classList.add('highlighted');
+          } else {
+            el.classList.remove('highlighted');
+          }
+        }
+      });
+
+      const scale = recommendation.diameterMM / 60.3;
+      const svgGraphic = document.querySelector('.bangle-svg-graphic');
+      if (svgGraphic) {
+        svgGraphic.style.transform = `rotate(-90deg) scale(${scale})`;
+      }
+    }
+
+    function drawHandStencil(ctx, w, h) {
+      ctx.save();
+      ctx.strokeStyle = "rgba(6, 182, 212, 0.35)";
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([8, 6]);
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = "rgba(6, 182, 212, 0.15)";
+      
+      const centerX = w / 2;
+      const centerY = h / 2 + h * 0.03;
+      const scale = Math.min(w, h) * 0.36;
+      
+      ctx.beginPath();
+      // Draw wrist left side
+      ctx.moveTo(centerX - scale * 0.22, centerY + scale * 0.5);
+      ctx.lineTo(centerX - scale * 0.22, centerY + scale * 0.3);
+      
+      // Thumb contour
+      ctx.quadraticCurveTo(centerX - scale * 0.42, centerY + scale * 0.18, centerX - scale * 0.38, centerY - scale * 0.05);
+      ctx.quadraticCurveTo(centerX - scale * 0.28, centerY - scale * 0.13, centerX - scale * 0.22, centerY + scale * 0.05);
+      
+      // Index finger
+      ctx.lineTo(centerX - scale * 0.22, centerY - scale * 0.32);
+      ctx.quadraticCurveTo(centerX - scale * 0.13, centerY - scale * 0.37, centerX - scale * 0.10, centerY - scale * 0.32);
+      ctx.lineTo(centerX - scale * 0.10, centerY + scale * 0.05);
+      
+      // Middle finger
+      ctx.lineTo(centerX - scale * 0.10, centerY - scale * 0.39);
+      ctx.quadraticCurveTo(centerX, centerY - scale * 0.44, centerX + scale * 0.05, centerY - scale * 0.39);
+      ctx.lineTo(centerX + scale * 0.05, centerY + scale * 0.05);
+      
+      // Ring finger
+      ctx.lineTo(centerX + scale * 0.05, centerY - scale * 0.35);
+      ctx.quadraticCurveTo(centerX + scale * 0.14, centerY - scale * 0.40, centerX + scale * 0.17, centerY - scale * 0.35);
+      ctx.lineTo(centerX + scale * 0.17, centerY + scale * 0.08);
+      
+      // Pinky finger
+      ctx.lineTo(centerX + scale * 0.17, centerY - scale * 0.23);
+      ctx.quadraticCurveTo(centerX + scale * 0.25, centerY - scale * 0.28, centerX + scale * 0.27, centerY - scale * 0.23);
+      ctx.quadraticCurveTo(centerX + scale * 0.30, centerY + scale * 0.15, centerX + scale * 0.22, centerY + scale * 0.3);
+      
+      // Wrist right side
+      ctx.lineTo(centerX + scale * 0.22, centerY + scale * 0.5);
+      ctx.stroke();
+
+      // Knuckle line
+      ctx.beginPath();
+      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = "rgba(59, 130, 246, 0.3)";
+      ctx.moveTo(centerX - scale * 0.18, centerY);
+      ctx.lineTo(centerX + scale * 0.18, centerY);
+      ctx.stroke();
+      
+      ctx.fillStyle = "rgba(6, 182, 212, 0.4)";
+      ctx.beginPath();
+      ctx.arc(centerX - scale * 0.18, centerY, 5, 0, 2 * Math.PI);
+      ctx.arc(centerX + scale * 0.18, centerY, 5, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
+      ctx.font = "600 11px 'Outfit', sans-serif";
+      ctx.textAlign = "center";
+      ctx.setLineDash([]);
+      ctx.fillText("ALIGN KNUCKLES HERE", centerX, centerY + scale * 0.62);
+      
+      ctx.restore();
     }
 
     // ------------------------------------------------------------------------
@@ -1370,7 +1657,9 @@
 
     handsDetector.onResults((results) => {
       // Clear overlay canvas
-      overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+      if (overlayCtx && overlayCanvas) {
+        overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+      }
       
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         if (!handFirstDetected) {
@@ -1389,6 +1678,11 @@
         stableMeasurementCount = Math.max(0, stableMeasurementCount - 2); 
         const progress = Math.round((stableMeasurementCount / REQUIRED_STABLE_FRAMES) * 100);
         updateHUD("Searching...", "--.- mm", progress, "Point camera at hand. Squeeze your knuckles tight.");
+        
+        // Draw dashed hand silhouette stencil to guide the user placement
+        if (overlayCtx && overlayCanvas) {
+          drawHandStencil(overlayCtx, overlayCanvas.width, overlayCanvas.height);
+        }
       }
     });
 
@@ -1470,7 +1764,7 @@
       // Safeguard 1: Check if hand is too close to camera (ideal range is >15cm/0.15m)
       if (depth5 <= 0.15 || depth17 <= 0.15) {
         stableMeasurementCount = Math.max(0, stableMeasurementCount - 1);
-        drawHandWireframe(landmarks, false);
+        drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
         updateHUD("Unstable", "--.- mm", getProgressPct(), "⚠️ Move hand further away (10-15 inches is ideal)", true);
         return;
       }
@@ -1478,7 +1772,7 @@
       // Safeguard 2: Check if hand is too far from camera (ideal range is <1.0m)
       if (depth5 > 1.0 || depth17 > 1.0) {
         stableMeasurementCount = Math.max(0, stableMeasurementCount - 1);
-        drawHandWireframe(landmarks, false);
+        drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
         updateHUD("Unstable", "--.- mm", getProgressPct(), "⚠️ Move hand closer to the camera (under 3 feet)", true);
         return;
       }
@@ -1486,7 +1780,7 @@
       // Safeguard 3: Check if hand is tilted (depth difference is more than 8.0cm)
       if (Math.abs(depth5 - depth17) > 0.08) {
         stableMeasurementCount = Math.max(0, stableMeasurementCount - 1);
-        drawHandWireframe(landmarks, false);
+        drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
         updateHUD("Unstable", "--.- mm", getProgressPct(), "⚠️ Keep hand flat. Do not tilt your hand.", true);
         return;
       }
@@ -1501,7 +1795,7 @@
       // Safeguard 4: Ignore out-of-bounds size measurements (human knuckles usually 50-80mm)
       if (rawWidthMM < 42 || rawWidthMM > 88) {
         stableMeasurementCount = Math.max(0, stableMeasurementCount - 1);
-        drawHandWireframe(landmarks, false);
+        drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
         updateHUD("Unstable", "--.- mm", getProgressPct(), "⚠️ Knuckles misaligned. Squeeze hand tightly.", true);
         return;
       }
@@ -1516,7 +1810,7 @@
         // Save knuckle tracking for bangle overlay projection
         lastValidHandPositions = { p5: p5_3d, p17: p17_3d };
         
-        drawHandWireframe(landmarks, true);
+        drawHandWireframe(landmarks, true, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
         drawProjectedBangleOverlay(p5_3d, p17_3d, smoothedKnuckleWidth);
         
         updateHUD(
@@ -1535,7 +1829,7 @@
         stableMeasurementCount = Math.max(0, stableMeasurementCount - 3);
         lastValidHandPositions = null;
         
-        drawHandWireframe(landmarks, false);
+        drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
         updateHUD(
           "Unstable", 
           `${rawWidthMM.toFixed(1)} mm`, 
@@ -1555,33 +1849,10 @@
       
       // Show results card modal
       setTimeout(() => {
-        document.getElementById('result-size-label').textContent = recommendation.size;
+        selectBangleSize(recommendation.size);
+        // Display actual measured knuckle width
         document.getElementById('result-width-mm').textContent = `${finalKnuckleWidth.toFixed(1)} mm`;
         
-        // Bangle inner diameter calculation (subtracting 2mm tolerance factor)
-        const innerDiameter = Math.max(50.0, finalKnuckleWidth - 2.0);
-        document.getElementById('result-diameter-mm').textContent = `${innerDiameter.toFixed(1)} mm`;
-        
-        // Update ruler marker
-        const rulerMarker = document.getElementById('result-ruler-marker');
-        rulerMarker.style.left = `${recommendation.positionPct}%`;
-        
-        // Highlight active size tick
-        BANGLE_SIZES.forEach(sz => {
-          const el = document.getElementById(`tick-${sz.size.replace('.', '-')}`);
-          if (el) {
-            if (sz.size === recommendation.size) {
-              el.classList.add('highlighted');
-            } else {
-              el.classList.remove('highlighted');
-            }
-          }
-        });
-
-        // Trigger scale animation on SVG circle to simulate fit
-        const svgCircle = document.getElementById('result-svg-circle');
-        svgCircle.setAttribute('stroke-dashoffset', '0');
-
         resultModal.classList.remove('hidden');
       }, 500);
     }
@@ -1620,7 +1891,7 @@
       return [u, v];
     }
 
-    function drawHandWireframe(landmarks, isValid) {
+    function drawHandWireframe(landmarks, isValid, progressFraction = 0) {
       const w = overlayCanvas.width;
       const h = overlayCanvas.height;
 
@@ -1637,34 +1908,8 @@
       const wX = wrist.x * w;
       const wY = wrist.y * h;
 
-      const themeColor = isValid ? "rgba(16, 185, 129, 0.85)" : "rgba(239, 68, 68, 0.85)";
+      const themeColor = isValid ? "rgba(6, 182, 212, 0.95)" : "rgba(239, 68, 68, 0.95)";
 
-      // Draw connection line
-      overlayCtx.beginPath();
-      overlayCtx.moveTo(iX, iY);
-      overlayCtx.lineTo(pX, pY);
-      overlayCtx.strokeStyle = themeColor;
-      overlayCtx.lineWidth = 4;
-      overlayCtx.stroke();
-
-      // Draw index knuckle dot
-      overlayCtx.beginPath();
-      overlayCtx.arc(iX, iY, 8, 0, 2 * Math.PI);
-      overlayCtx.fillStyle = themeColor;
-      overlayCtx.shadowBlur = 8;
-      overlayCtx.shadowColor = themeColor;
-      overlayCtx.fill();
-      overlayCtx.shadowBlur = 0; // Reset shadow
-
-      // Draw pinky knuckle dot
-      overlayCtx.beginPath();
-      overlayCtx.arc(pX, pY, 8, 0, 2 * Math.PI);
-      overlayCtx.fillStyle = themeColor;
-      overlayCtx.shadowBlur = 8;
-      overlayCtx.shadowColor = themeColor;
-      overlayCtx.fill();
-      overlayCtx.shadowBlur = 0;
-      
       // Draw light tracking visualizer lines representing hand box
       overlayCtx.beginPath();
       overlayCtx.moveTo(iX, iY);
@@ -1673,6 +1918,64 @@
       overlayCtx.strokeStyle = isValid ? "rgba(6, 182, 212, 0.2)" : "rgba(239, 68, 68, 0.15)";
       overlayCtx.lineWidth = 2;
       overlayCtx.stroke();
+
+      // Draw laser-like knuckle connection line (neon glow)
+      overlayCtx.beginPath();
+      overlayCtx.moveTo(iX, iY);
+      overlayCtx.lineTo(pX, pY);
+      overlayCtx.strokeStyle = themeColor;
+      overlayCtx.lineWidth = 4;
+      overlayCtx.shadowBlur = isValid ? 10 : 0;
+      overlayCtx.shadowColor = themeColor;
+      overlayCtx.stroke();
+      overlayCtx.shadowBlur = 0;
+
+      // Draw index knuckle dot
+      overlayCtx.beginPath();
+      overlayCtx.arc(iX, iY, 8, 0, 2 * Math.PI);
+      overlayCtx.fillStyle = themeColor;
+      overlayCtx.shadowBlur = isValid ? 8 : 0;
+      overlayCtx.shadowColor = themeColor;
+      overlayCtx.fill();
+      overlayCtx.shadowBlur = 0; // Reset shadow
+
+      // Draw pinky knuckle dot
+      overlayCtx.beginPath();
+      overlayCtx.arc(pX, pY, 8, 0, 2 * Math.PI);
+      overlayCtx.fillStyle = themeColor;
+      overlayCtx.shadowBlur = isValid ? 8 : 0;
+      overlayCtx.shadowColor = themeColor;
+      overlayCtx.fill();
+      overlayCtx.shadowBlur = 0;
+
+      // Draw radial progress circle directly around hand center
+      const midX = (iX + pX) / 2;
+      const midY = (iY + pY) / 2;
+      
+      if (isValid && progressFraction > 0) {
+        // Draw track
+        overlayCtx.beginPath();
+        overlayCtx.arc(midX, midY, 32, 0, 2 * Math.PI);
+        overlayCtx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+        overlayCtx.lineWidth = 4;
+        overlayCtx.stroke();
+
+        // Draw active loading segment
+        overlayCtx.beginPath();
+        const startAngle = -Math.PI / 2;
+        const endAngle = startAngle + (2 * Math.PI * progressFraction);
+        overlayCtx.arc(midX, midY, 32, startAngle, endAngle);
+        overlayCtx.strokeStyle = "#22d3ee";
+        overlayCtx.lineWidth = 4;
+        overlayCtx.lineCap = "round";
+        overlayCtx.stroke();
+
+        // Draw percentage text
+        overlayCtx.font = "bold 10px 'Outfit', sans-serif";
+        overlayCtx.fillStyle = "#22d3ee";
+        overlayCtx.textAlign = "center";
+        overlayCtx.fillText(Math.round(progressFraction * 100) + "%", midX, midY + 3.5);
+      }
     }
 
     // Zero-latency 3D circle projected overlay
