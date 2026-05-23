@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Aura Sizer - WebXR Bangle Size Estimator</title>
+  <meta name="description" content="Production-grade contactless bangle size estimator using WebXR Depth-Sensing and MediaPipe Hands on Android.">
+  
+  <!-- Premium Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- MediaPipe Hands CDN Dependency -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --bg-card: rgba(17, 24, 39, 0.7);
+      --bg-card-hover: rgba(31, 41, 55, 0.85);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-active: rgba(6, 182, 212, 0.5);
+      
+      --accent-cyan: #06b6d4;
+      --accent-blue: #3b82f6;
+      --accent-grad: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+      
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      
+      --state-success: #10b981;
+      --state-warning: #f59e0b;
+      --state-danger: #ef4444;
+      
+      --font-body: 'Inter', sans-serif;
+      --font-display: 'Outfit', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Screen/View states */
+    .screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      z-index: 10;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(20px);
+    }
+
+    /* Onboarding / Start Screen */
+    #screen-onboarding {
+      background: radial-gradient(circle at top right, rgba(6, 182, 212, 0.15), transparent 60%),
+                  radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.1), transparent 50%),
+                  var(--bg-dark);
+      overflow-y: auto;
+      justify-content: flex-start;
+      padding-top: 60px;
+    }
+
+    .brand-container {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .brand-logo {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      background: var(--accent-grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .brand-tagline {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      font-weight: 300;
+    }
+
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 28px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      margin-bottom: 24px;
+    }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title svg {
+      color: var(--accent-cyan);
+    }
+
+    .instruction-step {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .instruction-step:last-child {
+      margin-bottom: 0;
+    }
+
+    .step-number {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(6, 182, 212, 0.15);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      color: var(--accent-cyan);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .step-text h4 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .step-text p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    .btn {
+      font-family: var(--font-display);
+      background: var(--accent-grad);
+      color: var(--text-primary);
+      border: none;
+      border-radius: 16px;
+      padding: 16px 32px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 8px 24px rgba(6, 182, 212, 0.3);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      box-shadow: none;
+      margin-top: 12px;
+    }
+
+    .btn-secondary:active {
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: none;
+    }
+
+    /* WebXR Viewports and Canvases */
+    #ar-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+    }
+
+    #webgl-canvas, #overlay-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    #webgl-canvas {
+      z-index: 1;
+    }
+
+    #overlay-canvas {
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* HUD Controls (Overlay on AR) */
+    .ar-hud {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      z-index: 20;
+      padding: 20px;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .ar-hud-top {
+      top: 0;
+    }
+
+    .ar-hud-bottom {
+      bottom: 0;
+    }
+
+    .hud-card {
+      background: rgba(9, 13, 22, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 16px 20px;
+      width: 100%;
+      max-width: 380px;
+      pointer-events: auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .hud-status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .status-badge.searching {
+      color: var(--text-secondary);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .status-badge.calibrating {
+      color: var(--accent-cyan);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      animation: pulse 1.5s infinite alternate;
+    }
+
+    .status-badge.unstable {
+      color: var(--state-warning);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .status-badge.success {
+      color: var(--state-success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .live-width-val {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* Calibration Progress Line */
+    .progress-bar-container {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+      background: var(--accent-grad);
+      border-radius: 10px;
+      transition: width 0.1s linear;
+    }
+
+    .hud-instruction {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .hud-instruction.warning-active {
+      color: var(--state-warning);
+      font-weight: 500;
+      animation: blink 0.8s infinite;
+    }
+
+    .btn-exit-ar {
+      pointer-events: auto;
+      margin-top: 16px;
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: var(--state-danger);
+      box-shadow: none;
+      padding: 12px 24px;
+      font-size: 0.9rem;
+      border-radius: 12px;
+      max-width: 180px;
+    }
+
+    .btn-exit-ar:active {
+      background: rgba(239, 68, 68, 0.35);
+    }
+
+    /* Bottom Info Card during calibration */
+    .ar-bottom-card {
+      background: rgba(9, 13, 22, 0.85);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 14px 18px;
+      width: 100%;
+      max-width: 380px;
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .ar-bottom-card p {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    /* Result Overlay Modal */
+    #result-modal {
+      background: rgba(9, 13, 22, 0.9);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .result-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 32px;
+      padding: 40px 32px;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+      animation: scaleUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .success-icon-ring {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--state-success);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 24px;
+    }
+
+    .result-title {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .result-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+    }
+
+    .size-ring-display {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      margin: 0 auto 32px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .bangle-svg-graphic {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .size-label-large {
+      font-family: var(--font-display);
+      font-size: 3.5rem;
+      font-weight: 800;
+      background: var(--accent-grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1;
+    }
+
+    .size-detail-row {
+      display: flex;
+      justify-content: space-around;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 32px;
+    }
+
+    .detail-item h5 {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .detail-item p {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Comparison ruler design */
+    .ruler-container {
+      margin-bottom: 32px;
+      text-align: left;
+    }
+
+    .ruler-label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+
+    .ruler-line {
+      position: relative;
+      width: 100%;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      padding: 0 12px;
+      align-items: center;
+    }
+
+    .ruler-tick {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .ruler-tick.highlighted {
+      color: var(--accent-cyan);
+    }
+
+    .ruler-marker {
+      position: absolute;
+      top: -6px;
+      width: 12px;
+      height: 36px;
+      background: var(--accent-cyan);
+      border-radius: 4px;
+      box-shadow: 0 0 10px var(--accent-cyan);
+      transform: translateX(-50%);
+      transition: left 0.5s ease-in-out;
+    }
+
+    /* Error Overlay */
+    #error-modal {
+      background: #090d16;
+      z-index: 1000;
+    }
+
+    .error-card {
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      max-width: 400px;
+    }
+
+    .error-card svg {
+      color: var(--state-danger);
+    }
+
+    .error-title {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .error-desc {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    /* Animations */
+    @keyframes pulse {
+      0% { opacity: 0.6; box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.2); }
+      100% { opacity: 1; box-shadow: 0 0 12px 2px rgba(6, 182, 212, 0.4); }
+    }
+
+    @keyframes blink {
+      0% { opacity: 0.4; }
+      50% { opacity: 1; }
+      100% { opacity: 0.4; }
+    }
+
+    @keyframes scaleUp {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. ONBOARDING & WELCOME SCREEN -->
+  <section id="screen-onboarding" class="screen">
+    <div class="brand-container">
+      <h1 class="brand-logo">AURA SIZER</h1>
+      <p class="brand-tagline">Contactless 3D Bangle Size Estimation</p>
+    </div>
+
+    <!-- Instructions Card -->
+    <div class="card">
+      <h2 class="card-title">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Measurement Guide
+      </h2>
+      
+      <div class="instruction-step">
+        <div class="step-number">1</div>
+        <div class="step-text">
+          <h4>Squeeze Hand Tightly</h4>
+          <p>Tuck your thumb inward toward your palm, squeezing your knuckles as if sliding a real bangle on.</p>
+        </div>
+      </div>
+
+      <div class="instruction-step">
+        <div class="step-number">2</div>
+        <div class="step-text">
+          <h4>Keep Hand Flat & Still</h4>
+          <p>Place your hand flat on a flat surface in a well-lit area. Avoid tilting your palm.</p>
+        </div>
+      </div>
+
+      <div class="instruction-step">
+        <div class="step-number">3</div>
+        <div class="step-text">
+          <h4>Steady Camera Tracking</h4>
+          <p>Hover your phone directly above your knuckles. Keep the sensor stationary for 1.5 seconds to lock the size.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Requirements Check / CTA -->
+    <button id="btn-start-ar" class="btn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+      Start AR Sizer
+    </button>
+    
+    <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 16px; max-width: 320px; line-height: 1.4;">
+      Requires an Android device with Google Play Services for AR (ARCore) in Google Chrome.
+    </div>
+  </section>
+
+  <!-- 2. AR VIEW CONTAINER -->
+  <main id="ar-container" style="display: none;">
+    <!-- WebGL Rendering context for WebXR Depth layers -->
+    <canvas id="webgl-canvas"></canvas>
+    <!-- Overlay canvas for skeleton tracking, projected bangle overlays, and stats -->
+    <canvas id="overlay-canvas"></canvas>
+
+    <!-- TOP HUD -->
+    <div class="ar-hud ar-hud-top">
+      <div class="hud-card">
+        <div class="hud-status-row">
+          <span id="badge-status" class="status-badge searching">Searching...</span>
+          <span id="live-width" class="live-width-val">--.- mm</span>
+        </div>
+        
+        <!-- Stability Progress Bar -->
+        <div class="progress-bar-container">
+          <div id="calibration-progress" class="progress-bar"></div>
+        </div>
+        
+        <!-- Live status feedback instructions -->
+        <div id="hud-status-instruction" class="hud-instruction">
+          Fit your knuckles (index to pinky base) inside the frame
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM CONTROL HUD -->
+    <div class="ar-hud ar-hud-bottom">
+      <div class="ar-bottom-card">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-cyan); flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <p>Keep your phone parallel to your hand. Outliers and movements will automatically pause calibration.</p>
+      </div>
+      <button id="btn-exit-ar" class="btn btn-exit-ar">Exit Sizer</button>
+    </div>
+  </main>
+
+  <!-- 3. CALIBRATION COMPLETE / RESULT MODAL -->
+  <section id="result-modal" class="screen hidden">
+    <div class="result-card">
+      <div class="success-icon-ring">
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      
+      <h2 class="result-title">Sizing Locked</h2>
+      <p class="result-subtitle">Your measurements have been successfully calibrated.</p>
+      
+      <!-- Premium Size Visualizer -->
+      <div class="size-ring-display">
+        <svg class="bangle-svg-graphic" viewBox="0 0 100 100">
+          <!-- Glassy background circle representing the bangle -->
+          <circle cx="50" cy="50" r="44" stroke="rgba(255, 255, 255, 0.05)" stroke-width="6" fill="none" />
+          <!-- Neon colored circle representing the locked recommended size -->
+          <circle id="result-svg-circle" cx="50" cy="50" r="44" stroke="url(#cyan-blue-grad)" stroke-width="6" fill="none" stroke-dasharray="276" stroke-dashoffset="0" />
+          <defs>
+            <linearGradient id="cyan-blue-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#06b6d4" />
+              <stop offset="100%" stop-color="#3b82f6" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <div id="result-size-label" class="size-label-large">2.6</div>
+      </div>
+
+      <!-- Sizing Details -->
+      <div class="size-detail-row">
+        <div class="detail-item">
+          <h5>Knuckle Width</h5>
+          <p id="result-width-mm">60.3 mm</p>
+        </div>
+        <div class="detail-item">
+          <h5>Bangle ID (Inner)</h5>
+          <p id="result-diameter-mm">60.3 mm</p>
+        </div>
+      </div>
+
+      <!-- Size Ruler Scale -->
+      <div class="ruler-container">
+        <div class="ruler-label">Sizing Spectrum</div>
+        <div class="ruler-line">
+          <div id="tick-2-2" class="ruler-tick">2.2</div>
+          <div id="tick-2-4" class="ruler-tick">2.4</div>
+          <div id="tick-2-6" class="ruler-tick">2.6</div>
+          <div id="tick-2-8" class="ruler-tick">2.8</div>
+          <div id="tick-2-10" class="ruler-tick">2.10</div>
+          <!-- Sliding marker showing the user's fit position -->
+          <div id="result-ruler-marker" class="ruler-marker" style="left: 50%;"></div>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <button id="btn-recalibrate" class="btn">Measure Again</button>
+      <button id="btn-close-results" class="btn btn-secondary">Close View</button>
+    </div>
+  </section>
+
+  <!-- 4. ERRORS & FALLBACK OVERLAY -->
+  <section id="error-modal" class="screen hidden">
+    <div class="card error-card">
+      <div class="success-icon-ring" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); margin-bottom: 20px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <h2 id="error-title" class="error-title">AR Blocked</h2>
+      <p id="error-desc" class="error-desc">Device configuration or browser permissions do not support WebXR Depth-Sensing.</p>
+      
+      <div id="error-troubleshoot" style="text-align: left; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; margin-bottom: 24px;">
+        <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">How to fix:</h4>
+        <ul style="font-size: 0.8rem; color: var(--text-secondary); padding-left: 18px; line-height: 1.4;">
+          <li style="margin-bottom: 4px;">Ensure you are using **Google Chrome** on **Android**.</li>
+          <li style="margin-bottom: 4px;">Confirm **Google Play Services for AR** is installed.</li>
+          <li style="margin-bottom: 4px;">Make sure your page is loaded securely (HTTPS or localhost).</li>
+          <li>Accept camera access when requested.</li>
+        </ul>
+      </div>
+
+      <button id="btn-error-close" class="btn" style="background: rgba(255,255,255,0.08); color: var(--text-primary); border: 1px solid var(--border-color); box-shadow: none;">Back to Instructions</button>
+    </div>
+  </section>
+
+  <!-- Floating Debug Button -->
+  <button id="btn-toggle-debug" style="
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 999999;
+    background: rgba(17, 24, 39, 0.85);
+    border: 1px solid var(--border-color);
+    color: var(--accent-cyan);
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    pointer-events: auto;
+  ">Debug Console</button>
+
+  <!-- Debug Console Overlay -->
+  <div id="debug-console" style="
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: 40vh;
+    background: rgba(9, 13, 22, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 2px solid var(--accent-cyan);
+    color: #38bdf8;
+    font-family: 'Courier New', monospace;
+    font-size: 0.7rem;
+    overflow-y: auto;
+    padding: 16px;
+    z-index: 999998;
+    pointer-events: auto;
+    display: none;
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+  ">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 8px;">
+      <span style="font-weight: bold; color: var(--text-primary); font-family: var(--font-display); font-size: 0.85rem;">Aura Sizer Engine Debug Console</span>
+      <div style="display: flex; gap: 8px;">
+        <button onclick="document.getElementById('debug-log-output').textContent = 'Console cleared...'" style="background: rgba(255,255,255,0.05); color: var(--text-secondary); border: 1px solid var(--border-color); padding: 4px 8px; cursor: pointer; border-radius: 6px; font-size: 0.65rem;">Clear</button>
+        <button onclick="document.getElementById('debug-console').style.display='none'" style="background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.3); padding: 4px 8px; cursor: pointer; border-radius: 6px; font-size: 0.65rem;">Hide</button>
+      </div>
+    </div>
+    <div id="debug-log-output" style="white-space: pre-wrap; word-wrap: break-word; line-height: 1.4;">Console initialized...</div>
+  </div>
+
+  <!-- JavaScript Sizer Logic -->
+  <script>
+    // ------------------------------------------------------------------------
+    // ONSCREEN DEBUG CONSOLE LOGGER (OVERRIDE CONSOLE)
+    // ------------------------------------------------------------------------
+    (function() {
+      const debugConsole = document.getElementById('debug-console');
+      const debugToggle = document.getElementById('btn-toggle-debug');
+      const debugOutput = document.getElementById('debug-log-output');
+
+      if (debugToggle && debugConsole) {
+        debugToggle.addEventListener('click', () => {
+          if (debugConsole.style.display === 'none' || debugConsole.style.display === '') {
+            debugConsole.style.display = 'block';
+            debugConsole.scrollTop = debugConsole.scrollHeight;
+          } else {
+            debugConsole.style.display = 'none';
+          }
+        });
+      }
+
+      function logToConsole(type, ...args) {
+        const msg = args.map(arg => {
+          if (arg instanceof Error) return `${arg.name}: ${arg.message}\n${arg.stack}`;
+          if (typeof arg === 'object') {
+            try { return JSON.stringify(arg); } catch(e) { return String(arg); }
+          }
+          return String(arg);
+        }).join(' ');
+
+        const line = document.createElement('div');
+        line.style.marginBottom = '6px';
+        line.style.borderBottom = '1px solid rgba(255,255,255,0.03)';
+        line.style.paddingBottom = '4px';
+
+        let color = '#38bdf8'; // light blue
+        if (type === 'error') color = '#ef4444'; // red
+        if (type === 'warn') color = '#f59e0b'; // amber
+        if (type === 'info') color = '#10b981'; // green
+
+        line.style.color = color;
+        const timestamp = new Date().toLocaleTimeString();
+        line.textContent = `[${timestamp}] [${type.toUpperCase()}] ${msg}`;
+        
+        if (debugOutput) {
+          debugOutput.appendChild(line);
+          if (debugOutput.childNodes.length > 200) {
+            debugOutput.removeChild(debugOutput.firstChild);
+          }
+          debugConsole.scrollTop = debugConsole.scrollHeight;
+        }
+      }
+
+      const originalLog = console.log;
+      const originalError = console.error;
+      const originalWarn = console.warn;
+
+      console.log = (...args) => {
+        originalLog.apply(console, args);
+        logToConsole('log', ...args);
+      };
+      console.error = (...args) => {
+        originalError.apply(console, args);
+        logToConsole('error', ...args);
+      };
+      console.warn = (...args) => {
+        originalWarn.apply(console, args);
+        logToConsole('warn', ...args);
+      };
+
+      window.addEventListener('error', (e) => {
+        logToConsole('error', `Uncaught Script Error: ${e.message} at ${e.filename}:${e.lineno}`);
+      });
+      window.addEventListener('unhandledrejection', (e) => {
+        logToConsole('error', `Unhandled Promise Rejection: ${e.reason}`);
+      });
+
+      console.log("Device UserAgent:", navigator.userAgent);
+      console.log("WebXR support available:", !!navigator.xr);
+    })();
+
+    // ------------------------------------------------------------------------
+    // CONSTANTS & CONFIGURATION
+    // ------------------------------------------------------------------------
+    const REQUIRED_STABLE_FRAMES = 45; // ~1.5s of steady tracking at 30fps
+    
+    // Standard bangle sizes mapping (Inner diameter in MM)
+    const BANGLE_SIZES = [
+      { size: "2.2", diameterMM: 54.0, positionPct: 10 },
+      { size: "2.4", diameterMM: 57.2, positionPct: 30 },
+      { size: "2.6", diameterMM: 60.3, positionPct: 50 },
+      { size: "2.8", diameterMM: 63.5, positionPct: 70 },
+      { size: "2.10", diameterMM: 66.7, positionPct: 90 }
+    ];
+
+    // ------------------------------------------------------------------------
+    // SIGNAL STABILIZATION: 1D KALMAN FILTER
+    // ------------------------------------------------------------------------
+    class KnuckleKalmanFilter {
+      constructor(processNoise = 0.02, measurementNoise = 0.4, estimationError = 2.0, initialValue = 60.0) {
+        this.q = processNoise;       // Process noise covariance (higher = filters less, adapts faster)
+        this.r = measurementNoise;   // Measurement noise covariance (higher = filters more)
+        this.p = estimationError;    // Estimation error covariance
+        this.x = initialValue;       // Current state estimate
+        this.k = 0;                  // Kalman gain
+      }
+
+      update(measurement) {
+        // Prediction Update
+        this.p = this.p + this.q;
+
+        // Measurement Update
+        this.k = this.p / (this.p + this.r);
+        this.x = this.x + this.k * (measurement - this.x);
+        this.p = (1 - this.k) * this.p;
+
+        return this.x;
+      }
+
+      reset(val = 60.0) {
+        this.x = val;
+        this.p = 2.0;
+        this.k = 0;
+      }
+    }
+
+    // ------------------------------------------------------------------------
+    // GLOBAL STATE
+    // ------------------------------------------------------------------------
+    let xrSession = null;
+    let xrRefSpace = null;
+    let xrDepthInfo = null;
+    
+    let gl = null;
+    let glBinding = null; // WebXR WebGL binding for raw camera access
+    let overlayCanvas = null;
+    let overlayCtx = null;
+    
+    // Frame extraction textures & FBO
+    let offscreenCanvas = document.createElement('canvas');
+    let offscreenCtx = offscreenCanvas.getContext('2d');
+    let cameraFBO = null; // FBO bound to WebXR camera texture
+    let downsampleFBO = null; // FBO bound to downsampled texture
+    let downsampleTexture = null;
+    let downsampleWidth = 0;
+    let downsampleHeight = 0;
+    
+    let isProcessingHand = false;
+    let calibrationLocked = false;
+    let stableMeasurementCount = 0;
+    let activeProjectionMatrix = null;
+    
+    const kalmanFilter = new KnuckleKalmanFilter();
+    let smoothedKnuckleWidth = 60.0;
+    let lastValidHandPositions = null; // Stores [{x_view, y_view, z_view}, ...] for rendering bangle circles
+    
+    // Debug Logging Trackers
+    let frameCount = 0;
+    let handFirstDetected = false;
+    let depthFirstResolved = false;
+
+    // UI elements
+    const screenOnboarding = document.getElementById('screen-onboarding');
+    const arContainer = document.getElementById('ar-container');
+    const resultModal = document.getElementById('result-modal');
+    const errorModal = document.getElementById('error-modal');
+
+    // ------------------------------------------------------------------------
+    // APPLICATION LIFECYCLE INITIALIZATION
+    // ------------------------------------------------------------------------
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById('btn-start-ar').addEventListener('click', startAR);
+      document.getElementById('btn-exit-ar').addEventListener('click', stopAR);
+      document.getElementById('btn-recalibrate').addEventListener('click', recalibrate);
+      document.getElementById('btn-close-results').addEventListener('click', () => {
+        resultModal.classList.add('hidden');
+        screenOnboarding.classList.remove('hidden');
+      });
+      document.getElementById('btn-error-close').addEventListener('click', () => {
+        errorModal.classList.add('hidden');
+        screenOnboarding.classList.remove('hidden');
+      });
+      
+      // Initialize drawing layer canvas sizes
+      overlayCanvas = document.getElementById('overlay-canvas');
+      overlayCtx = overlayCanvas.getContext('2d');
+      window.addEventListener('resize', resizeOverlayCanvas);
+    });
+
+    function resizeOverlayCanvas() {
+      if (overlayCanvas) {
+        overlayCanvas.width = window.innerWidth;
+        overlayCanvas.height = window.innerHeight;
+      }
+    }
+
+    function showUIError(title, desc) {
+      document.getElementById('error-title').textContent = title;
+      document.getElementById('error-desc').textContent = desc;
+      errorModal.classList.remove('hidden');
+      screenOnboarding.classList.add('hidden');
+    }
+
+    function updateHUD(status, liveWidthText, progressPct, instruction, isWarning = false) {
+      const badge = document.getElementById('badge-status');
+      badge.textContent = status;
+      badge.className = "status-badge " + status.toLowerCase().replace("...", "");
+
+      document.getElementById('live-width').textContent = liveWidthText;
+      
+      const pBar = document.getElementById('calibration-progress');
+      pBar.style.width = `${progressPct}%`;
+      if (progressPct >= 100) {
+        pBar.style.background = "var(--state-success)";
+      } else {
+        pBar.style.background = "var(--accent-grad)";
+      }
+
+      const instEl = document.getElementById('hud-status-instruction');
+      instEl.textContent = instruction;
+      if (isWarning) {
+        instEl.classList.add('warning-active');
+      } else {
+        instEl.classList.remove('warning-active');
+      }
+    }
+
+    // ------------------------------------------------------------------------
+    // WEBXR & GL RUNTIME INITIALIZATION
+    // ------------------------------------------------------------------------
+    async function startAR() {
+      if (!navigator.xr) {
+        showUIError("AR Unsupported", "WebXR device API is not supported on this browser.");
+        return;
+      }
+
+      const supported = await navigator.xr.isSessionSupported('immersive-ar');
+      if (!supported) {
+        showUIError("AR Unsupported", "Immersive augmented reality (AR) is not supported on this device.");
+        return;
+      }
+
+      try {
+        console.log("Requesting WebXR immersive-ar session...");
+        console.log("Required features: ['local', 'depth-sensing', 'dom-overlay', 'camera-access']");
+        
+        // Request WebXR session with device depth-sensing, DOM overlay, and camera-access capabilities
+        xrSession = await navigator.xr.requestSession('immersive-ar', {
+          requiredFeatures: ['local', 'depth-sensing', 'dom-overlay', 'camera-access'],
+          depthSensing: {
+            usagePreference: ['cpu-optimized'],
+            dataFormatPreference: ['luminance-alpha']
+          },
+          domOverlay: { root: document.body }
+        });
+        
+        console.log("SUCCESS: WebXR immersive-ar session started.");
+
+        // Initialize WebGL context
+        const canvas = document.getElementById('webgl-canvas');
+        console.log("Initializing WebGL context...");
+        gl = canvas.getContext('webgl2', { xrCompatible: true });
+        if (!gl) {
+          gl = canvas.getContext('webgl', { xrCompatible: true });
+          console.warn("WebGL2 not supported. Falling back to WebGL1 (GPU blitting will be disabled).");
+        } else {
+          console.log("SUCCESS: WebGL2 context initialized.");
+        }
+
+        // Initialize XRWebGLBinding for raw camera frame access
+        try {
+          console.log("Initializing XRWebGLBinding...");
+          glBinding = new XRWebGLBinding(xrSession, gl);
+          console.log("SUCCESS: XRWebGLBinding initialized.");
+        } catch (e) {
+          console.error("CRITICAL: Failed to create XRWebGLBinding.", e);
+        }
+
+        // Configure XR render layers
+        console.log("Configuring WebXR base render layer...");
+        xrSession.updateRenderState({
+          baseLayer: new XRWebGLLayer(xrSession, gl)
+        });
+        console.log("SUCCESS: WebXR render layer bound.");
+
+        xrRefSpace = await xrSession.requestReferenceSpace('local');
+        console.log("SUCCESS: XR local reference space obtained.");
+
+        // Toggle UI
+        screenOnboarding.classList.add('hidden');
+        arContainer.style.display = 'block';
+        resizeOverlayCanvas();
+        recalibrate();
+
+        // Start render frame loop
+        console.log("Launching requestAnimationFrame frame loop...");
+        xrSession.requestAnimationFrame((time, frame) => onXRFrame(time, frame, gl));
+        console.log("SUCCESS: Frame loop registered.");
+
+      } catch (err) {
+        console.error("CRITICAL: startAR failed with error:", err);
+        showUIError("AR Session Failed", "Initialization of AR camera loop failed: " + err.message);
+      }
+    }
+
+    function stopAR() {
+      if (xrSession) {
+        xrSession.end().then(() => {
+          xrSession = null;
+          arContainer.style.display = 'none';
+          screenOnboarding.classList.remove('hidden');
+        });
+      }
+    }
+
+    function recalibrate() {
+      calibrationLocked = false;
+      stableMeasurementCount = 0;
+      kalmanFilter.reset(60.0);
+      lastValidHandPositions = null;
+      overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+      updateHUD("Searching...", "--.- mm", 0, "Fit your knuckles (index to pinky base) inside the frame");
+    }
+
+    // ------------------------------------------------------------------------
+    // WEBGL GPU DOWNSAMPLING & CAMERA TEXTURE EXTRACTOR
+    // ------------------------------------------------------------------------
+    function initDownsampleFBO(gl, width, height) {
+      if (downsampleFBO && downsampleWidth === width && downsampleHeight === height) {
+        return;
+      }
+      if (downsampleFBO) {
+        gl.deleteFramebuffer(downsampleFBO);
+        gl.deleteTexture(downsampleTexture);
+      }
+      downsampleWidth = width;
+      downsampleHeight = height;
+      
+      downsampleFBO = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, downsampleFBO);
+      
+      downsampleTexture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, downsampleTexture);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, downsampleTexture, 0);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
+
+    function extractWebXRFrame(gl, frame, session, cameraTexture) {
+      try {
+        if (!cameraTexture) {
+          if (frameCount % 60 === 0) {
+            console.warn("extractWebXRFrame called but cameraTexture is null.");
+          }
+          return null;
+        }
+
+        const baseLayer = session.renderState.baseLayer;
+        if (!baseLayer) return null;
+
+        const pose = frame.getViewerPose(xrRefSpace);
+        if (!pose || pose.views.length === 0) return null;
+
+        const view = pose.views[0];
+        const viewport = baseLayer.getViewport(view);
+        if (!viewport || viewport.width === 0 || viewport.height === 0) return null;
+
+        // Ensure we have valid camera dimensions from WebXR Raw Camera
+        const cameraWidth = view.camera ? view.camera.width : viewport.width;
+        const cameraHeight = view.camera ? view.camera.height : viewport.height;
+
+        // Downsample to a target size of max 512px maintaining aspect ratio
+        const maxDim = 512;
+        let targetWidth = maxDim;
+        let targetHeight = maxDim;
+        
+        if (cameraWidth > cameraHeight) {
+          targetHeight = Math.round((cameraHeight / cameraWidth) * maxDim);
+        } else {
+          targetWidth = Math.round((cameraWidth / cameraHeight) * maxDim);
+        }
+
+        const pixels = new Uint8Array(targetWidth * targetHeight * 4);
+
+        if (gl instanceof WebGL2RenderingContext) {
+          // 1. Initialize downsample framebuffer
+          initDownsampleFBO(gl, targetWidth, targetHeight);
+
+          // 2. Initialize and bind camera framebuffer
+          if (!cameraFBO) {
+            cameraFBO = gl.createFramebuffer();
+          }
+          gl.bindFramebuffer(gl.FRAMEBUFFER, cameraFBO);
+          gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, cameraTexture, 0);
+
+          const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+          if (status !== gl.FRAMEBUFFER_COMPLETE) {
+            if (frameCount % 60 === 0) {
+              console.warn("Camera FBO is incomplete: " + status);
+            }
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            return null;
+          }
+
+          // 3. Blit from Camera FBO to Downsample FBO (linear resizing)
+          gl.bindFramebuffer(gl.READ_FRAMEBUFFER, cameraFBO);
+          gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, downsampleFBO);
+          gl.blitFramebuffer(
+            0, 0, cameraWidth, cameraHeight,
+            0, 0, targetWidth, targetHeight,
+            gl.COLOR_BUFFER_BIT,
+            gl.LINEAR
+          );
+
+          // 4. Read pixels from downsample FBO
+          gl.bindFramebuffer(gl.READ_FRAMEBUFFER, downsampleFBO);
+          gl.readPixels(0, 0, targetWidth, targetHeight, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        } else {
+          // WebGL1 Fallback: bind camera texture directly to FBO and read (no blit support)
+          if (!cameraFBO) {
+            cameraFBO = gl.createFramebuffer();
+          }
+          gl.bindFramebuffer(gl.FRAMEBUFFER, cameraFBO);
+          gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, cameraTexture, 0);
+          
+          const rawPixels = new Uint8Array(cameraWidth * cameraHeight * 4);
+          gl.readPixels(0, 0, cameraWidth, cameraHeight, gl.RGBA, gl.UNSIGNED_BYTE, rawPixels);
+          
+          // CPU scaling downsampler
+          for (let y = 0; y < targetHeight; y++) {
+            const srcY = Math.floor((y / targetHeight) * cameraHeight);
+            for (let x = 0; x < targetWidth; x++) {
+              const srcX = Math.floor((x / targetWidth) * cameraWidth);
+              const srcIdx = (srcX + srcY * cameraWidth) * 4;
+              const destIdx = (x + y * targetWidth) * 4;
+              pixels[destIdx] = rawPixels[srcIdx];
+              pixels[destIdx+1] = rawPixels[srcIdx+1];
+              pixels[destIdx+2] = rawPixels[srcIdx+2];
+              pixels[destIdx+3] = rawPixels[srcIdx+3];
+            }
+          }
+        }
+
+        // Restore default framebuffer binding
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+        // Debug check to verify FBO pixels are not completely blank
+        if (frameCount % 60 === 0) {
+          let allZero = true;
+          const stride = Math.floor(pixels.length / 200);
+          for (let i = 0; i < pixels.length; i += stride) {
+            if (pixels[i] !== 0) { allZero = false; break; }
+          }
+          console.log("FBO Blit Check - targetWidth: " + targetWidth + ", targetHeight: " + targetHeight + ", is FBO buffer blank?", allZero);
+        }
+
+        // Draw pixel data onto canvas for MediaPipe input
+        offscreenCanvas.width = targetWidth;
+        offscreenCanvas.height = targetHeight;
+        const imageData = offscreenCtx.createImageData(targetWidth, targetHeight);
+
+        // Flip image vertically since WebGL framebuffer origin is bottom-left
+        for (let y = 0; y < targetHeight; y++) {
+          const srcRow = y * targetWidth * 4;
+          const destRow = (targetHeight - 1 - y) * targetWidth * 4;
+          imageData.data.set(pixels.subarray(srcRow, srcRow + targetWidth * 4), destRow);
+        }
+
+        offscreenCtx.putImageData(imageData, 0, 0);
+        return offscreenCanvas;
+      } catch (err) {
+        console.error("Error in extractWebXRFrame:", err);
+        return null;
+      }
+    }
+
+    // ------------------------------------------------------------------------
+    // WEBXR FRAME TICK & MEDIAPIPE SCHEDULER
+    // ------------------------------------------------------------------------
+    function onXRFrame(time, frame, gl) {
+      if (!xrSession) return;
+      
+      // Request next frame immediately to maintain ARCore lifecycle
+      xrSession.requestAnimationFrame((t, f) => onXRFrame(t, f, gl));
+
+      const pose = frame.getViewerPose(xrRefSpace);
+      if (pose && pose.views.length > 0) {
+        const view = pose.views[0];
+        let cameraTexture = null;
+
+        // Retrieve camera image texture if available
+        if (glBinding && view.camera) {
+          try {
+            cameraTexture = glBinding.getCameraImage(view.camera);
+          } catch (e) {
+            if (frameCount % 60 === 0) {
+              console.warn("Failed to retrieve camera texture from glBinding:", e);
+            }
+          }
+        } else {
+          if (frameCount % 60 === 0) {
+            console.warn("glBinding or view.camera is missing. glBinding active:", !!glBinding, "camera active:", !!view.camera);
+          }
+        }
+
+        // Retrieve depth information map from frame
+        try {
+          xrDepthInfo = frame.getDepthInformation(view);
+        } catch (e) {
+          console.warn("Depth information is unavailable for this view:", e);
+        }
+
+        // Render ARCore background (Clear screen with alpha=0, letting browser render camera feed)
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        // Stop measurement loop if sizer has locked in a measurement
+        if (calibrationLocked) {
+          // Keep drawing static overlay of the locked bangle
+          drawBangleStaticOverlay();
+          return;
+        }
+
+        // Step 1: Capture frame pixels for computer vision using the camera texture
+        const frameCanvas = extractWebXRFrame(gl, frame, xrSession, cameraTexture);
+
+        // Step 2: Feed into MediaPipe async detector (with processing lock to prevent lag)
+        if (frameCanvas && !isProcessingHand) {
+          isProcessingHand = true;
+          detectHandLandmarks(frameCanvas, view).finally(() => {
+            isProcessingHand = false;
+          });
+        }
+      }
+    }
+
+    // ------------------------------------------------------------------------
+    // HAND DETECTION & COORDINATE TRANSLATION
+    // ------------------------------------------------------------------------
+    console.log("Initializing MediaPipe Hands Detector...");
+    const handsDetector = new Hands({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+    console.log("MediaPipe Hands Detector created.");
+
+    handsDetector.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 1,
+      minDetectionConfidence: 0.8,
+      minTrackingConfidence: 0.8
+    });
+    console.log("MediaPipe Hands options configured.");
+
+    handsDetector.onResults((results) => {
+      // Clear overlay canvas
+      overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+      
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        if (!handFirstDetected) {
+          handFirstDetected = true;
+          console.log("SUCCESS: MediaPipe Hands detected a hand!");
+        }
+        if (frameCount % 60 === 0) {
+          console.log("Periodic: Hand actively tracked. Landmarks count: " + results.multiHandLandmarks[0].length);
+        }
+        processHandLandmarks(results.multiHandLandmarks[0]);
+      } else {
+        if (frameCount % 60 === 0) {
+          console.log("Periodic: No hands detected by MediaPipe in this frame.");
+        }
+        // Reset calibration progress if hand is lost
+        stableMeasurementCount = Math.max(0, stableMeasurementCount - 2); 
+        const progress = Math.round((stableMeasurementCount / REQUIRED_STABLE_FRAMES) * 100);
+        updateHUD("Searching...", "--.- mm", progress, "Point camera at hand. Squeeze your knuckles tight.");
+      }
+    });
+
+    async function detectHandLandmarks(canvasElement, xrView) {
+      activeProjectionMatrix = xrView.projectionMatrix;
+      await handsDetector.send({ image: canvasElement });
+    }
+
+    // Exact 3D view-space coordinates calculation without needing gl-matrix library
+    function unproject(lm, depth, projectionMatrix) {
+      // 1. Convert normalized MediaPipe coordinates to Normalized Device Coordinates (NDC)
+      // MediaPipe x: [0, 1] (left to right), y: [0, 1] (top to bottom)
+      // NDC x: [-1, 1] (left to right), y: [-1, 1] (bottom to top)
+      const ndcX = 2 * lm.x - 1;
+      const ndcY = 1 - 2 * lm.y;
+
+      // 2. Extract specific elements from the 4x4 column-major projection matrix
+      const m0 = projectionMatrix[0];  // M00 (Perspective X-scaling)
+      const m5 = projectionMatrix[5];  // M11 (Perspective Y-scaling)
+      const m8 = projectionMatrix[8];  // M20 (Frustum asymmetric X offset)
+      const m9 = projectionMatrix[9];  // M21 (Frustum asymmetric Y offset)
+
+      // 3. Unproject back to 3D camera coordinates in meters
+      // X = ((ndcX + M20) / M00) * depth
+      // Y = ((ndcY + M21) / M11) * depth
+      // Z = -depth (WebGl camera points towards negative Z axis)
+      const x = ((ndcX + m8) / m0) * depth;
+      const y = ((ndcY + m9) / m5) * depth;
+      const z = -depth;
+
+      return [x, y, z];
+    }
+
+    function calculateDistance(p1, p2) {
+      return Math.sqrt(
+        Math.pow(p1[0] - p2[0], 2) +
+        Math.pow(p1[1] - p2[1], 2) +
+        Math.pow(p1[2] - p2[2], 2)
+      );
+    }
+
+    // ------------------------------------------------------------------------
+    // TRACKING HANDLER & STABILITY ENGINE
+    // ------------------------------------------------------------------------
+    function processHandLandmarks(landmarks) {
+      if (!xrDepthInfo) {
+        updateHUD("Searching...", "--.- mm", 0, "Initializing depth engine... hold phone steady.");
+        return;
+      }
+
+      // Landmarks 5 (Index knuckle MCP joint) and 17 (Pinky knuckle MCP joint)
+      const lm5 = landmarks[5];
+      const lm17 = landmarks[17];
+
+      // Clamp normalized coordinates to [0.001, 0.999] to prevent out-of-bounds RangeError
+      const clampVal = (val) => Math.max(0.001, Math.min(0.999, val));
+      const u5 = clampVal(lm5.x);
+      const v5 = clampVal(lm5.y);
+      const u17 = clampVal(lm17.x);
+      const v17 = clampVal(lm17.y);
+
+      // Query raw depth buffer values in meters at these screen coords
+      let depth5 = 0;
+      let depth17 = 0;
+      
+      try {
+        depth5 = xrDepthInfo.getDepthInMeters(u5, v5);
+        depth17 = xrDepthInfo.getDepthInMeters(u17, v17);
+        if (!depthFirstResolved && (depth5 > 0 || depth17 > 0)) {
+          depthFirstResolved = true;
+          console.log("SUCCESS: Resolved depth from WebXR. depth5: " + depth5.toFixed(3) + "m, depth17: " + depth17.toFixed(3) + "m");
+        }
+      } catch (e) {
+        console.error("CRITICAL: Depth sensing lookup failed with error:", e);
+      }
+
+      const getProgressPct = () => Math.round((stableMeasurementCount / REQUIRED_STABLE_FRAMES) * 100);
+
+      // Safeguard 1: Check if hand is too close to camera (ideal range is >15cm/0.15m)
+      if (depth5 <= 0.15 || depth17 <= 0.15) {
+        stableMeasurementCount = Math.max(0, stableMeasurementCount - 1);
+        drawHandWireframe(landmarks, false);
+        updateHUD("Unstable", "--.- mm", getProgressPct(), "⚠️ Move hand further away (10-15 inches is ideal)", true);
+        return;
+      }
+
+      // Safeguard 2: Check if hand is too far from camera (ideal range is <1.0m)
+      if (depth5 > 1.0 || depth17 > 1.0) {
+        stableMeasurementCount = Math.max(0, stableMeasurementCount - 1);
+        drawHandWireframe(landmarks, false);
+        updateHUD("Unstable", "--.- mm", getProgressPct(), "⚠️ Move hand closer to the camera (under 3 feet)", true);
+        return;
+      }
+
+      // Safeguard 3: Check if hand is tilted (depth difference is more than 8.0cm)
+      if (Math.abs(depth5 - depth17) > 0.08) {
+        stableMeasurementCount = Math.max(0, stableMeasurementCount - 1);
+        drawHandWireframe(landmarks, false);
+        updateHUD("Unstable", "--.- mm", getProgressPct(), "⚠️ Keep hand flat. Do not tilt your hand.", true);
+        return;
+      }
+
+      // Calculate true 3D spatial points using clamped coordinates
+      const p5_3d = unproject({ x: u5, y: v5 }, depth5, activeProjectionMatrix);
+      const p17_3d = unproject({ x: u17, y: v17 }, depth17, activeProjectionMatrix);
+
+      // Compute physical distance in mm
+      const rawWidthMM = calculateDistance(p5_3d, p17_3d) * 1000;
+
+      // Safeguard 4: Ignore out-of-bounds size measurements (human knuckles usually 50-80mm)
+      if (rawWidthMM < 42 || rawWidthMM > 88) {
+        stableMeasurementCount = Math.max(0, stableMeasurementCount - 1);
+        drawHandWireframe(landmarks, false);
+        updateHUD("Unstable", "--.- mm", getProgressPct(), "⚠️ Knuckles misaligned. Squeeze hand tightly.", true);
+        return;
+      }
+
+      // Apply Kalman filter smoothing
+      smoothedKnuckleWidth = kalmanFilter.update(rawWidthMM);
+      const variance = Math.abs(rawWidthMM - smoothedKnuckleWidth);
+
+      // Safeguard 5: Check stability (variance < 1.5mm allows normal camera noise and hand micro-shakes)
+      if (variance < 1.5) {
+        stableMeasurementCount++;
+        // Save knuckle tracking for bangle overlay projection
+        lastValidHandPositions = { p5: p5_3d, p17: p17_3d };
+        
+        drawHandWireframe(landmarks, true);
+        drawProjectedBangleOverlay(p5_3d, p17_3d, smoothedKnuckleWidth);
+        
+        updateHUD(
+          "Calibrating", 
+          `${smoothedKnuckleWidth.toFixed(1)} mm`, 
+          getProgressPct(), 
+          "Hold perfectly still. Calibrating..."
+        );
+        
+        // Calibration Success Lock
+        if (stableMeasurementCount >= REQUIRED_STABLE_FRAMES) {
+          lockCalibration(smoothedKnuckleWidth);
+        }
+      } else {
+        // Decay calibration progress gradually rather than clearing it instantly on single noisy frame
+        stableMeasurementCount = Math.max(0, stableMeasurementCount - 3);
+        lastValidHandPositions = null;
+        
+        drawHandWireframe(landmarks, false);
+        updateHUD(
+          "Unstable", 
+          `${rawWidthMM.toFixed(1)} mm`, 
+          getProgressPct(), 
+          "⚠️ Movement detected. Hold hand completely still!", 
+          true
+        );
+      }
+    }
+
+    function lockCalibration(finalKnuckleWidth) {
+      calibrationLocked = true;
+      updateHUD("Success", `${finalKnuckleWidth.toFixed(1)} mm`, 100, "Measurement Locked!");
+
+      // Recommend Bangle size
+      const recommendation = getRecommendedBangleSize(finalKnuckleWidth);
+      
+      // Show results card modal
+      setTimeout(() => {
+        document.getElementById('result-size-label').textContent = recommendation.size;
+        document.getElementById('result-width-mm').textContent = `${finalKnuckleWidth.toFixed(1)} mm`;
+        
+        // Bangle inner diameter calculation (subtracting 2mm tolerance factor)
+        const innerDiameter = Math.max(50.0, finalKnuckleWidth - 2.0);
+        document.getElementById('result-diameter-mm').textContent = `${innerDiameter.toFixed(1)} mm`;
+        
+        // Update ruler marker
+        const rulerMarker = document.getElementById('result-ruler-marker');
+        rulerMarker.style.left = `${recommendation.positionPct}%`;
+        
+        // Highlight active size tick
+        BANGLE_SIZES.forEach(sz => {
+          const el = document.getElementById(`tick-${sz.size.replace('.', '-')}`);
+          if (el) {
+            if (sz.size === recommendation.size) {
+              el.classList.add('highlighted');
+            } else {
+              el.classList.remove('highlighted');
+            }
+          }
+        });
+
+        // Trigger scale animation on SVG circle to simulate fit
+        const svgCircle = document.getElementById('result-svg-circle');
+        svgCircle.setAttribute('stroke-dashoffset', '0');
+
+        resultModal.classList.remove('hidden');
+      }, 500);
+    }
+
+    function getRecommendedBangleSize(measuredWidthMM) {
+      // Add a 2mm tolerance factor for physical hand compression
+      const searchDiameter = measuredWidthMM - 2.0;
+
+      for (let option of BANGLE_SIZES) {
+        if (searchDiameter <= option.diameterMM) {
+          return option;
+        }
+      }
+      return { size: "2.12+", diameterMM: 69.8, positionPct: 98 };
+    }
+
+    // ------------------------------------------------------------------------
+    // SCREEN SPACE DRAWING LAYER & BANGLE OVERLAY
+    // ------------------------------------------------------------------------
+    function project3DTo2D(p_view, projectionMatrix, width, height) {
+      const [X, Y, Z] = p_view;
+      const m0 = projectionMatrix[0];
+      const m5 = projectionMatrix[5];
+      const m8 = projectionMatrix[8];
+      const m9 = projectionMatrix[9];
+
+      // Perspective divide (w = -Z)
+      const w = -Z;
+      const ndcX = (m0 * X + m8 * Z) / w;
+      const ndcY = (m5 * Y + m9 * Z) / w;
+
+      // Transform to canvas coordinate system
+      const u = ((ndcX + 1) / 2) * width;
+      const v = ((1 - ndcY) / 2) * height;
+
+      return [u, v];
+    }
+
+    function drawHandWireframe(landmarks, isValid) {
+      const w = overlayCanvas.width;
+      const h = overlayCanvas.height;
+
+      // Knuckle landmarks
+      const indexKnuckle = landmarks[5];
+      const pinkyKnuckle = landmarks[17];
+      const wrist = landmarks[0];
+
+      // Convert to screen space coords
+      const iX = indexKnuckle.x * w;
+      const iY = indexKnuckle.y * h;
+      const pX = pinkyKnuckle.x * w;
+      const pY = pinkyKnuckle.y * h;
+      const wX = wrist.x * w;
+      const wY = wrist.y * h;
+
+      const themeColor = isValid ? "rgba(16, 185, 129, 0.85)" : "rgba(239, 68, 68, 0.85)";
+
+      // Draw connection line
+      overlayCtx.beginPath();
+      overlayCtx.moveTo(iX, iY);
+      overlayCtx.lineTo(pX, pY);
+      overlayCtx.strokeStyle = themeColor;
+      overlayCtx.lineWidth = 4;
+      overlayCtx.stroke();
+
+      // Draw index knuckle dot
+      overlayCtx.beginPath();
+      overlayCtx.arc(iX, iY, 8, 0, 2 * Math.PI);
+      overlayCtx.fillStyle = themeColor;
+      overlayCtx.shadowBlur = 8;
+      overlayCtx.shadowColor = themeColor;
+      overlayCtx.fill();
+      overlayCtx.shadowBlur = 0; // Reset shadow
+
+      // Draw pinky knuckle dot
+      overlayCtx.beginPath();
+      overlayCtx.arc(pX, pY, 8, 0, 2 * Math.PI);
+      overlayCtx.fillStyle = themeColor;
+      overlayCtx.shadowBlur = 8;
+      overlayCtx.shadowColor = themeColor;
+      overlayCtx.fill();
+      overlayCtx.shadowBlur = 0;
+      
+      // Draw light tracking visualizer lines representing hand box
+      overlayCtx.beginPath();
+      overlayCtx.moveTo(iX, iY);
+      overlayCtx.lineTo(wX, wY);
+      overlayCtx.lineTo(pX, pY);
+      overlayCtx.strokeStyle = isValid ? "rgba(6, 182, 212, 0.2)" : "rgba(239, 68, 68, 0.15)";
+      overlayCtx.lineWidth = 2;
+      overlayCtx.stroke();
+    }
+
+    // Zero-latency 3D circle projected overlay
+    function drawProjectedBangleOverlay(p5_3d, p17_3d, measuredWidthMM) {
+      if (!activeProjectionMatrix) return;
+
+      const w = overlayCanvas.width;
+      const h = overlayCanvas.height;
+
+      // 1. Center of the bangle is the midpoint between knuckles 5 and 17 in view space
+      const cx = (p5_3d[0] + p17_3d[0]) / 2;
+      const cy = (p5_3d[1] + p17_3d[1]) / 2;
+      const cz = (p5_3d[2] + p17_3d[2]) / 2;
+      const center = [cx, cy, cz];
+
+      // 2. Set the recommended bangle radius in meters
+      // Sizing is based on hand width minus compression factor
+      const recSize = getRecommendedBangleSize(measuredWidthMM);
+      const diameterMeters = recSize.diameterMM / 1000;
+      const radiusMeters = diameterMeters / 2;
+
+      // 3. Generate points on the circle in view space (aligned with camera XY plane)
+      const numPoints = 40;
+      const circlePoints = [];
+      for (let i = 0; i <= numPoints; i++) {
+        const theta = (i * 2 * Math.PI) / numPoints;
+        const xOffset = radiusMeters * Math.cos(theta);
+        const yOffset = radiusMeters * Math.sin(theta);
+        
+        // Point parallel to camera sensor at depth CZ
+        const p_view = [cx + xOffset, cy + yOffset, cz];
+        
+        // Project to 2D screen coordinates
+        const [u, v] = project3DTo2D(p_view, activeProjectionMatrix, w, h);
+        circlePoints.push([u, v]);
+      }
+
+      // 4. Draw the 3D projected circle on canvas
+      overlayCtx.beginPath();
+      overlayCtx.moveTo(circlePoints[0][0], circlePoints[0][1]);
+      for (let i = 1; i < circlePoints.length; i++) {
+        overlayCtx.lineTo(circlePoints[i][0], circlePoints[i][1]);
+      }
+      overlayCtx.closePath();
+
+      // Premium Cyan-Blue gradient style for circle stroke
+      const grad = overlayCtx.createLinearGradient(0, 0, w, h);
+      grad.addColorStop(0, '#06b6d4');
+      grad.addColorStop(1, '#3b82f6');
+
+      overlayCtx.strokeStyle = grad;
+      overlayCtx.lineWidth = 5;
+      overlayCtx.shadowBlur = 12;
+      overlayCtx.shadowColor = "rgba(6, 182, 212, 0.4)";
+      overlayCtx.stroke();
+      overlayCtx.shadowBlur = 0; // Reset
+
+      // Draw sizing tag near the bangle circle center
+      const [centerU, centerV] = project3DTo2D(center, activeProjectionMatrix, w, h);
+      overlayCtx.font = "bold 13px 'Outfit', sans-serif";
+      overlayCtx.fillStyle = "#ffffff";
+      overlayCtx.textAlign = "center";
+      overlayCtx.shadowBlur = 4;
+      overlayCtx.shadowColor = "#000000";
+      overlayCtx.fillText(`BANGLE SIZE ${recSize.size}`, centerU, centerV + 5);
+      overlayCtx.shadowBlur = 0;
+    }
+
+    function drawBangleStaticOverlay() {
+      if (lastValidHandPositions && activeProjectionMatrix) {
+        overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+        drawProjectedBangleOverlay(
+          lastValidHandPositions.p5, 
+          lastValidHandPositions.p17, 
+          smoothedKnuckleWidth
+        );
+      }
+    }
+  </script>
+</body>
+</html>
