@@ -907,7 +907,6 @@
         // Hide Carousel Instructions Card
         carouselCard.classList.add('hidden');
         carouselCard.style.display = 'none';
-        console.log("Gate Check: Returning user active. Direct scan shortcut visible.");
       } else {
         // Hide Welcome Back Card
         returningCard.classList.add('hidden');
@@ -916,7 +915,6 @@
         // Show Carousel Instructions Card
         carouselCard.classList.remove('hidden');
         carouselCard.style.display = 'flex'; // Preserves the card flex alignment layout
-        console.log("Gate Check: New visitor tracking. Carousel onboarding visible.");
       }
     }
 
