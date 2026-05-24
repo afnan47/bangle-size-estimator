@@ -9,33 +9,34 @@
   <!-- Premium Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- MediaPipe Hands CDN Dependency -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
   <style>
     :root {
-      --bg-dark: #090d16;
-      --bg-card: rgba(17, 24, 39, 0.7);
-      --bg-card-hover: rgba(31, 41, 55, 0.85);
-      --border-color: rgba(255, 255, 255, 0.08);
-      --border-active: rgba(6, 182, 212, 0.5);
+      --bg-dark: #0a0104;
+      --bg-card: rgba(23, 4, 10, 0.78);
+      --bg-card-hover: rgba(38, 7, 16, 0.88);
+      --border-color: rgba(212, 175, 55, 0.15);
+      --border-active: rgba(212, 175, 55, 0.65);
       
-      --accent-cyan: #06b6d4;
-      --accent-blue: #3b82f6;
-      --accent-grad: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+      --accent-gold-light: #f5e2b3;
+      --accent-gold: #d4af37;
+      --accent-gold-dark: #8a640f;
+      --accent-grad: linear-gradient(135deg, #f5e2b3 0%, #d4af37 50%, #8a640f 100%);
       
-      --text-primary: #f8fafc;
-      --text-secondary: #94a3b8;
-      --text-muted: #64748b;
+      --text-primary: #fdfbf7;
+      --text-secondary: #d5c8be;
+      --text-muted: #8c7d75;
       
-      --state-success: #10b981;
-      --state-warning: #f59e0b;
-      --state-danger: #ef4444;
+      --state-success: #c5a880;     /* Soft gold success state */
+      --state-warning: #e0a899;     /* Soft peach warning state */
+      --state-danger: #d9534f;      /* Muted ruby error/danger state */
       
-      --font-body: 'Inter', sans-serif;
-      --font-display: 'Outfit', sans-serif;
+      --font-body: 'Montserrat', sans-serif;
+      --font-display: 'Cormorant Garamond', serif;
     }
 
     * {
@@ -78,8 +79,8 @@
 
     /* Onboarding / Start Screen */
     #screen-onboarding {
-      background: radial-gradient(circle at top right, rgba(6, 182, 212, 0.15), transparent 60%),
-                  radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.1), transparent 50%),
+      background: radial-gradient(circle at top right, rgba(212, 175, 55, 0.12), transparent 55%),
+                  radial-gradient(circle at bottom left, rgba(224, 168, 153, 0.08), transparent 50%),
                   var(--bg-dark);
       overflow-y: auto;
       justify-content: flex-start;
@@ -93,46 +94,53 @@
 
     .brand-logo {
       font-family: var(--font-display);
-      font-size: 2.5rem;
-      font-weight: 800;
-      letter-spacing: -0.05em;
+      font-size: 2.8rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
       background: var(--accent-grad);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       margin-bottom: 8px;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
     }
 
     .brand-tagline {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       color: var(--text-secondary);
-      font-weight: 300;
+      font-weight: 400;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
     }
 
     .card {
       background: var(--bg-card);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--border-color);
-      border-radius: 24px;
-      padding: 28px;
+      border-radius: 28px;
+      padding: 32px 28px;
       width: 100%;
       max-width: 440px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 24px 50px rgba(0, 0, 0, 0.55), 
+                  inset 0 1px 0 rgba(255, 255, 255, 0.05);
       margin-bottom: 24px;
     }
 
     .card-title {
       font-family: var(--font-display);
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin-bottom: 18px;
+      font-size: 1.4rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      margin-bottom: 22px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+      color: var(--accent-gold-light);
     }
 
     .card-title svg {
-      color: var(--accent-cyan);
+      color: var(--accent-gold);
+      filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.3));
     }
 
     .instruction-step {
@@ -147,37 +155,41 @@
 
     .step-number {
       flex-shrink: 0;
-      width: 28px;
-      height: 28px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
-      background: rgba(6, 182, 212, 0.15);
-      border: 1px solid rgba(6, 182, 212, 0.3);
-      color: var(--accent-cyan);
+      background: rgba(212, 175, 55, 0.08);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      color: var(--accent-gold);
       display: flex;
       justify-content: center;
       align-items: center;
       font-weight: 600;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
+      font-family: var(--font-display);
     }
 
     .step-text h4 {
       font-size: 0.95rem;
       font-weight: 600;
+      color: var(--text-primary);
       margin-bottom: 4px;
     }
 
     .step-text p {
       font-size: 0.85rem;
       color: var(--text-secondary);
-      line-height: 1.4;
-    }    /* Carousel Onboarding styles */
+      line-height: 1.45;
+    }
+
+    /* Carousel Onboarding styles */
     .carousel-card {
       overflow: hidden;
       position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 24px 16px 16px 16px;
+      padding: 28px 20px 20px 20px;
     }
     .carousel-track-container {
       width: 100%;
@@ -187,7 +199,7 @@
     .carousel-track {
       display: flex;
       width: 300%; /* 3 slides */
-      transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+      transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);
     }
     .carousel-slide {
       width: 33.333%;
@@ -201,32 +213,32 @@
     .slide-illustration {
       width: 130px;
       height: 130px;
-      margin-bottom: 20px;
-      background: rgba(255, 255, 255, 0.015);
+      margin-bottom: 22px;
+      background: rgba(212, 175, 55, 0.02);
       border: 1px solid var(--border-color);
       border-radius: 50%;
       display: flex;
       justify-content: center;
       align-items: center;
       position: relative;
-      box-shadow: inset 0 4px 20px rgba(0,0,0,0.15);
+      box-shadow: inset 0 4px 20px rgba(0,0,0,0.25);
     }
     .ux-illustration {
       width: 90px;
       height: 90px;
-      filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.35));
+      filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.45));
     }
     .slide-title {
       font-family: var(--font-display);
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: var(--text-primary);
+      font-size: 1.35rem;
+      font-weight: 500;
+      color: var(--accent-gold-light);
       margin-bottom: 8px;
     }
     .slide-desc {
       font-size: 0.85rem;
       color: var(--text-secondary);
-      line-height: 1.5;
+      line-height: 1.55;
       margin-bottom: 12px;
     }
     .carousel-nav {
@@ -245,7 +257,8 @@
     .carousel-dot.active {
       width: 24px;
       border-radius: 4px;
-      background: var(--accent-cyan);
+      background: var(--accent-gold);
+      box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
     }
     .carousel-actions {
       width: 100%;
@@ -258,14 +271,16 @@
     }
 
     .btn {
-      font-family: var(--font-display);
+      font-family: var(--font-body);
       background: var(--accent-grad);
-      color: var(--text-primary);
+      color: #0c0205; /* Dark velvet wine color text for contrast */
       border: none;
-      border-radius: 16px;
+      border-radius: 18px;
       padding: 16px 32px;
-      font-size: 1rem;
-      font-weight: 600;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
       cursor: pointer;
       width: 100%;
       max-width: 440px;
@@ -273,25 +288,37 @@
       justify-content: center;
       align-items: center;
       gap: 10px;
-      box-shadow: 0 8px 24px rgba(6, 182, 212, 0.3);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 8px 24px rgba(212, 175, 55, 0.25);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
       text-decoration: none;
+    }
+
+    .btn:hover {
+      filter: brightness(1.08);
+      box-shadow: 0 10px 28px rgba(212, 175, 55, 0.35);
     }
 
     .btn:active {
       transform: scale(0.98);
-      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
     }
 
     .btn-secondary {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(23, 4, 10, 0.6);
       border: 1px solid var(--border-color);
+      color: var(--text-primary);
       box-shadow: none;
       margin-top: 12px;
     }
 
+    .btn-secondary:hover {
+      background: rgba(212, 175, 55, 0.05);
+      border-color: rgba(212, 175, 55, 0.3);
+      box-shadow: none;
+    }
+
     .btn-secondary:active {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(212, 175, 55, 0.1);
       box-shadow: none;
     }
 
@@ -355,16 +382,17 @@
     }
 
     .hud-card {
-      background: rgba(9, 13, 22, 0.85);
+      background: rgba(23, 4, 10, 0.88);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--border-color);
-      border-radius: 20px;
+      border-radius: 24px;
       padding: 16px 20px;
       width: 100%;
       max-width: 380px;
       pointer-events: auto;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 
+                  inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
 
     .hud-status-row {
@@ -380,39 +408,40 @@
       gap: 6px;
       padding: 6px 12px;
       border-radius: 100px;
-      font-size: 0.75rem;
-      font-weight: 600;
+      font-size: 0.72rem;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      background: rgba(255, 255, 255, 0.05);
+      letter-spacing: 0.06em;
+      background: rgba(255, 255, 255, 0.03);
     }
 
     .status-badge.searching {
       color: var(--text-secondary);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     .status-badge.calibrating {
-      color: var(--accent-cyan);
-      border: 1px solid rgba(6, 182, 212, 0.3);
-      animation: pulse 1.5s infinite alternate;
+      color: var(--accent-gold);
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      animation: goldPulse 1.5s infinite alternate;
     }
 
     .status-badge.unstable {
       color: var(--state-warning);
-      border: 1px solid rgba(245, 158, 11, 0.3);
+      border: 1px solid rgba(224, 168, 153, 0.35);
     }
 
     .status-badge.success {
       color: var(--state-success);
-      border: 1px solid rgba(16, 185, 129, 0.3);
+      border: 1px solid rgba(197, 168, 128, 0.35);
     }
 
     .live-width-val {
-      font-family: var(--font-display);
-      font-size: 1.5rem;
+      font-family: var(--font-body);
+      font-size: 1.45rem;
       font-weight: 700;
       color: var(--text-primary);
+      letter-spacing: -0.02em;
     }
 
     /* Calibration Progress Line */
@@ -442,32 +471,41 @@
 
     .hud-instruction.warning-active {
       color: var(--state-warning);
-      font-weight: 500;
+      font-weight: 600;
       animation: blink 0.8s infinite;
     }
 
     .btn-exit-ar {
       pointer-events: auto;
       margin-top: 16px;
-      background: rgba(239, 68, 68, 0.2);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      color: var(--state-danger);
+      background: rgba(217, 83, 79, 0.15);
+      border: 1px solid rgba(217, 83, 79, 0.3);
+      color: #ff9995;
       box-shadow: none;
       padding: 12px 24px;
-      font-size: 0.9rem;
-      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      border-radius: 14px;
       max-width: 180px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-exit-ar:hover {
+      background: rgba(217, 83, 79, 0.25);
+      border-color: rgba(217, 83, 79, 0.45);
     }
 
     .btn-exit-ar:active {
-      background: rgba(239, 68, 68, 0.35);
+      transform: scale(0.97);
     }
 
     /* Bottom Info Card during calibration */
     .ar-bottom-card {
-      background: rgba(9, 13, 22, 0.85);
+      background: rgba(23, 4, 10, 0.88);
       border: 1px solid var(--border-color);
-      border-radius: 20px;
+      border-radius: 24px;
       padding: 14px 18px;
       width: 100%;
       max-width: 380px;
@@ -475,6 +513,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.5);
     }
 
     .ar-bottom-card p {
@@ -485,7 +524,7 @@
 
     /* Result Overlay Modal */
     #result-modal {
-      background: rgba(9, 13, 22, 0.9);
+      background: rgba(10, 1, 4, 0.94);
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
       display: flex;
@@ -502,7 +541,8 @@
       width: 100%;
       max-width: 420px;
       text-align: center;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7), 
+                  inset 0 1px 0 rgba(255, 255, 255, 0.05);
       animation: scaleUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
@@ -510,20 +550,23 @@
       width: 72px;
       height: 72px;
       border-radius: 50%;
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      color: var(--state-success);
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      color: var(--accent-gold);
       display: flex;
       justify-content: center;
       align-items: center;
       margin: 0 auto 24px;
+      filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.2));
     }
 
     .result-title {
       font-family: var(--font-display);
-      font-size: 1.75rem;
-      font-weight: 700;
+      font-size: 1.95rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
       margin-bottom: 8px;
+      color: var(--text-primary);
     }
 
     .result-subtitle {
@@ -552,36 +595,38 @@
 
     .size-label-large {
       font-family: var(--font-display);
-      font-size: 3.5rem;
-      font-weight: 800;
+      font-size: 3.8rem;
+      font-weight: 600;
       background: var(--accent-grad);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       line-height: 1;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
     }
 
     .size-detail-row {
       display: flex;
       justify-content: space-around;
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(255, 255, 255, 0.02);
       border: 1px solid var(--border-color);
-      border-radius: 16px;
+      border-radius: 18px;
       padding: 16px;
       margin-bottom: 32px;
     }
 
     .detail-item h5 {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.08em;
       margin-bottom: 4px;
+      font-weight: 600;
     }
 
     .detail-item p {
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--text-primary);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--accent-gold-light);
     }
 
     /* Comparison ruler design */
@@ -594,15 +639,17 @@
       font-size: 0.8rem;
       color: var(--text-secondary);
       margin-bottom: 12px;
-      font-weight: 500;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
     }
 
     .ruler-line {
       position: relative;
       width: 100%;
       height: 24px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
       border: 1px solid var(--border-color);
       display: flex;
       justify-content: space-between;
@@ -612,7 +659,7 @@
 
     .ruler-tick {
       font-size: 0.75rem;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text-muted);
       cursor: pointer;
       padding: 4px 8px;
@@ -622,13 +669,13 @@
 
     .ruler-tick:hover {
       color: var(--text-primary);
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(212, 175, 55, 0.05);
     }
 
     .ruler-tick.highlighted {
-      color: var(--accent-cyan);
-      background: rgba(6, 182, 212, 0.1);
-      box-shadow: 0 0 8px rgba(6, 182, 212, 0.15);
+      color: #0c0205;
+      background: var(--accent-grad);
+      box-shadow: 0 2px 8px rgba(212, 175, 55, 0.25);
     }
 
     .ruler-marker {
@@ -636,19 +683,19 @@
       top: -6px;
       width: 12px;
       height: 36px;
-      background: var(--accent-cyan);
+      background: var(--accent-gold);
       border-radius: 4px;
-      box-shadow: 0 0 10px var(--accent-cyan);
+      box-shadow: 0 0 12px var(--accent-gold);
       transform: translateX(-50%);
       transition: left 0.3s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
     /* Feedback panel design */
     .feedback-panel {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px dashed rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
-      padding: 16px;
+      background: rgba(212, 175, 55, 0.02);
+      border: 1px dashed rgba(212, 175, 55, 0.2);
+      border-radius: 18px;
+      padding: 18px;
       margin-bottom: 24px;
       text-align: center;
       transition: all 0.3s ease;
@@ -656,7 +703,7 @@
     .feedback-question {
       font-size: 0.85rem;
       color: var(--text-secondary);
-      font-weight: 500;
+      font-weight: 600;
       margin-bottom: 12px;
     }
     .feedback-buttons-row {
@@ -665,7 +712,7 @@
       gap: 12px;
     }
     .btn-feedback {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--border-color);
       color: var(--text-secondary);
       border-radius: 12px;
@@ -679,18 +726,19 @@
       transition: all 0.2s ease;
     }
     .btn-feedback:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(212, 175, 55, 0.05);
       color: var(--text-primary);
+      border-color: rgba(212, 175, 55, 0.3);
     }
     .btn-feedback-yes:hover {
-      border-color: rgba(16, 185, 129, 0.4);
-      color: var(--state-success);
-      box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+      border-color: rgba(212, 175, 55, 0.6);
+      color: var(--accent-gold);
+      box-shadow: 0 0 10px rgba(212, 175, 55, 0.15);
     }
     .btn-feedback-no:hover {
-      border-color: rgba(239, 68, 68, 0.4);
-      color: var(--state-danger);
-      box-shadow: 0 0 10px rgba(239, 68, 68, 0.1);
+      border-color: rgba(217, 83, 79, 0.5);
+      color: #ff9995;
+      box-shadow: 0 0 10px rgba(217, 83, 79, 0.15);
     }
     /* Generic utility */
     .hidden {
@@ -700,7 +748,7 @@
     .feedback-sizes-container {
       margin-top: 16px;
       padding-top: 14px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      border-top: 1px solid rgba(212, 175, 55, 0.1);
       overflow: hidden;
       animation: slideDown 0.35s cubic-bezier(0.25, 1, 0.5, 1);
     }
@@ -724,10 +772,10 @@
       width: 44px;
       height: 44px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(255, 255, 255, 0.02);
       border: 1px solid var(--border-color);
       color: var(--text-secondary);
-      font-family: var(--font-display);
+      font-family: var(--font-body);
       font-size: 0.85rem;
       font-weight: 700;
       cursor: pointer;
@@ -737,17 +785,17 @@
       transition: all 0.2s ease;
     }
     .btn-feedback-circle:hover {
-      background: rgba(6, 182, 212, 0.15);
-      border-color: var(--accent-cyan);
+      background: rgba(212, 175, 55, 0.15);
+      border-color: var(--accent-gold);
       color: var(--text-primary);
-      box-shadow: 0 0 8px rgba(6, 182, 212, 0.25);
+      box-shadow: 0 0 8px rgba(212, 175, 55, 0.25);
       transform: translateY(-2px);
     }
     .btn-feedback-circle.selected {
       background: var(--accent-grad);
       border-color: transparent;
-      color: var(--text-primary);
-      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+      color: #0c0205;
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
     }
     .feedback-success-msg {
       font-size: 0.85rem;
@@ -759,13 +807,14 @@
 
     /* Error Overlay */
     #error-modal {
-      background: #090d16;
+      background: #0a0104;
       z-index: 1000;
     }
 
     .error-card {
-      border: 1px solid rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(217, 83, 79, 0.3);
       max-width: 400px;
+      background: rgba(23, 4, 10, 0.95);
     }
 
     .error-card svg {
@@ -774,9 +823,10 @@
 
     .error-title {
       font-family: var(--font-display);
-      font-size: 1.5rem;
-      font-weight: 700;
+      font-size: 1.65rem;
+      font-weight: 500;
       margin-bottom: 12px;
+      color: var(--text-primary);
     }
 
     .error-desc {
@@ -787,9 +837,9 @@
     }
 
     /* Animations */
-    @keyframes pulse {
-      0% { opacity: 0.6; box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.2); }
-      100% { opacity: 1; box-shadow: 0 0 12px 2px rgba(6, 182, 212, 0.4); }
+    @keyframes goldPulse {
+      0% { opacity: 0.6; box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.2); }
+      100% { opacity: 1; box-shadow: 0 0 12px 2px rgba(212, 175, 55, 0.55); }
     }
 
     @keyframes blink {
@@ -805,9 +855,9 @@
 
     /* PC Camera-less simulation background */
     .simulated-bg {
-      background: radial-gradient(circle at center, rgba(6, 182, 212, 0.12), var(--bg-dark) 80%),
-                  linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-                  linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px) !important;
+      background: radial-gradient(circle at center, rgba(212, 175, 55, 0.1), var(--bg-dark) 80%),
+                  linear-gradient(rgba(212, 175, 55, 0.02) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(212, 175, 55, 0.02) 1px, transparent 1px) !important;
       background-size: 100% 100%, 40px 40px, 40px 40px !important;
       background-position: center, center, center !important;
       animation: scanGrid 12s linear infinite !important;
@@ -825,9 +875,10 @@
        Must live here (not inside a display:none element) so the browser can resolve url() references. -->
   <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute">
     <defs>
-      <linearGradient id="cyan-blue-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%"   stop-color="#06b6d4" />
-        <stop offset="100%" stop-color="#3b82f6" />
+      <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%"   stop-color="#f5e2b3" />
+        <stop offset="50%"  stop-color="#d4af37" />
+        <stop offset="100%" stop-color="#8a640f" />
       </linearGradient>
     </defs>
   </svg>
@@ -849,12 +900,12 @@
           <div class="carousel-slide" data-index="0">
             <div class="slide-illustration">
               <svg class="ux-illustration" viewBox="0 0 100 100">
-                <path d="M50 82 C38 82, 25 72, 25 50 C25 38, 30 28, 40 24 C41 23, 42 25, 41 27 C37 36, 38 48, 45 52 C50 55, 54 48, 54 40 C54 25, 47 15, 60 15 C70 15, 75 28, 75 42 C75 60, 62 82, 50 82 Z" fill="none" stroke="url(#cyan-blue-grad)" stroke-width="3" stroke-linecap="round" />
-                <path d="M15 50 Q10 40 18 32" fill="none" stroke="#22d3ee" stroke-width="2" marker-end="url(#arrow)" />
-                <path d="M85 50 Q90 40 82 32" fill="none" stroke="#22d3ee" stroke-width="2" marker-end="url(#arrow)" />
+                <path d="M50 82 C38 82, 25 72, 25 50 C25 38, 30 28, 40 24 C41 23, 42 25, 41 27 C37 36, 38 48, 45 52 C50 55, 54 48, 54 40 C54 25, 47 15, 60 15 C70 15, 75 28, 75 42 C75 60, 62 82, 50 82 Z" fill="none" stroke="url(#gold-grad)" stroke-width="3" stroke-linecap="round" />
+                <path d="M15 50 Q10 40 18 32" fill="none" stroke="#d4af37" stroke-width="2" marker-end="url(#arrow)" />
+                <path d="M85 50 Q90 40 82 32" fill="none" stroke="#d4af37" stroke-width="2" marker-end="url(#arrow)" />
                 <defs>
                   <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#22d3ee"/>
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#d4af37"/>
                   </marker>
                 </defs>
               </svg>
@@ -867,10 +918,10 @@
           <div class="carousel-slide" data-index="1">
             <div class="slide-illustration">
               <svg class="ux-illustration" viewBox="0 0 100 100">
-                <line x1="10" y1="80" x2="90" y2="80" stroke="rgba(255,255,255,0.2)" stroke-width="3" stroke-linecap="round" />
-                <path d="M20 72 Q32 52 46 52 Q58 52 68 64 L82 66 L82 80 L18 80 Z" fill="none" stroke="url(#cyan-blue-grad)" stroke-width="3" stroke-linecap="round" />
-                <path d="M46 45 L46 25" fill="none" stroke="#22d3ee" stroke-width="2" stroke-dasharray="3,3" />
-                <circle cx="46" cy="22" r="4" fill="#22d3ee" />
+                <line x1="10" y1="80" x2="90" y2="80" stroke="rgba(255,255,255,0.15)" stroke-width="3" stroke-linecap="round" />
+                <path d="M20 72 Q32 52 46 52 Q58 52 68 64 L82 66 L82 80 L18 80 Z" fill="none" stroke="url(#gold-grad)" stroke-width="3" stroke-linecap="round" />
+                <path d="M46 45 L46 25" fill="none" stroke="#d4af37" stroke-width="2" stroke-dasharray="3,3" />
+                <circle cx="46" cy="22" r="4" fill="#d4af37" />
               </svg>
             </div>
             <h3 class="slide-title">2. Keep Hand Flat & Still</h3>
@@ -881,11 +932,11 @@
           <div class="carousel-slide" data-index="2">
             <div class="slide-illustration">
               <svg class="ux-illustration" viewBox="0 0 100 100">
-                <path d="M30 80 Q50 68 70 80" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="3" stroke-linecap="round" />
-                <rect x="25" y="20" width="50" height="25" rx="5" fill="none" stroke="url(#cyan-blue-grad)" stroke-width="3" />
-                <line x1="50" y1="18" x2="50" y2="22" stroke="rgba(255,255,255,0.5)" stroke-width="2" />
-                <line x1="28" y1="48" x2="33" y2="76" stroke="#22d3ee" stroke-width="1.5" stroke-dasharray="2,2" />
-                <line x1="72" y1="48" x2="67" y2="76" stroke="#22d3ee" stroke-width="1.5" stroke-dasharray="2,2" />
+                <path d="M30 80 Q50 68 70 80" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="3" stroke-linecap="round" />
+                <rect x="25" y="20" width="50" height="25" rx="5" fill="none" stroke="url(#gold-grad)" stroke-width="3" />
+                <line x1="50" y1="18" x2="50" y2="22" stroke="rgba(255,255,255,0.4)" stroke-width="2" />
+                <line x1="28" y1="48" x2="33" y2="76" stroke="#d4af37" stroke-width="1.5" stroke-dasharray="2,2" />
+                <line x1="72" y1="48" x2="67" y2="76" stroke="#d4af37" stroke-width="1.5" stroke-dasharray="2,2" />
               </svg>
             </div>
             <h3 class="slide-title">3. Level Phone Directly Above</h3>
@@ -944,7 +995,7 @@
     <!-- BOTTOM CONTROL HUD -->
     <div class="ar-hud ar-hud-bottom">
       <div class="ar-bottom-card">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-cyan); flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-gold); flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
         <p>Keep your phone parallel to your hand. Outliers and movements will automatically pause calibration.</p>
       </div>
       <button id="btn-exit-ar" class="btn btn-exit-ar">Exit Sizer</button>
@@ -967,7 +1018,7 @@
           <!-- Glassy background circle representing the bangle -->
           <circle cx="50" cy="50" r="44" stroke="rgba(255, 255, 255, 0.05)" stroke-width="6" fill="none" />
           <!-- Neon colored circle representing the locked recommended size -->
-          <circle id="result-svg-circle" cx="50" cy="50" r="44" stroke="url(#cyan-blue-grad)" stroke-width="6" fill="none" stroke-dasharray="276" stroke-dashoffset="0" />
+          <circle id="result-svg-circle" cx="50" cy="50" r="44" stroke="url(#gold-grad)" stroke-width="6" fill="none" stroke-dasharray="276" stroke-dashoffset="0" />
         </svg>
         <div id="result-size-label" class="size-label-large">2.6</div>
       </div>
@@ -1066,18 +1117,21 @@
     top: 12px;
     right: 140px;
     z-index: 999999;
-    background: rgba(17, 24, 39, 0.85);
+    background: rgba(23, 4, 10, 0.88);
     border: 1px solid var(--border-color);
-    color: var(--state-success);
+    color: var(--accent-gold);
     padding: 8px 16px;
     border-radius: 12px;
-    font-family: var(--font-display);
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     pointer-events: auto;
     display: none;
+    transition: all 0.2s ease;
   ">Simulate Scan (PC Test)</button>
 
   <!-- Floating Debug Button -->
@@ -1086,18 +1140,21 @@
     top: 12px;
     right: 12px;
     z-index: 999999;
-    background: rgba(17, 24, 39, 0.85);
+    background: rgba(23, 4, 10, 0.88);
     border: 1px solid var(--border-color);
-    color: var(--accent-cyan);
+    color: var(--state-warning);
     padding: 8px 16px;
     border-radius: 12px;
-    font-family: var(--font-display);
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     pointer-events: auto;
     display: none;
+    transition: all 0.2s ease;
   ">Debug Console</button>
 
   <!-- Debug Console Overlay -->
@@ -1107,11 +1164,11 @@
     left: 0;
     width: 100vw;
     height: 40vh;
-    background: rgba(9, 13, 22, 0.95);
+    background: rgba(10, 1, 4, 0.98);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-top: 2px solid var(--accent-cyan);
-    color: #38bdf8;
+    border-top: 2px solid var(--accent-gold);
+    color: #e0b743;
     font-family: 'Courier New', monospace;
     font-size: 0.7rem;
     overflow-y: auto;
@@ -1119,13 +1176,13 @@
     z-index: 999998;
     pointer-events: auto;
     display: none;
-    box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.6);
   ">
-    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 8px;">
-      <span style="font-weight: bold; color: var(--text-primary); font-family: var(--font-display); font-size: 0.85rem;">Aura Sizer Engine Debug Console</span>
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px; margin-bottom: 8px;">
+      <span style="font-weight: bold; color: var(--text-primary); font-family: var(--font-display); font-size: 0.9rem; letter-spacing: 0.05em;">Saubhagya Sizer Debug Console</span>
       <div style="display: flex; gap: 8px;">
-        <button onclick="document.getElementById('debug-log-output').textContent = 'Console cleared...'" style="background: rgba(255,255,255,0.05); color: var(--text-secondary); border: 1px solid var(--border-color); padding: 4px 8px; cursor: pointer; border-radius: 6px; font-size: 0.65rem;">Clear</button>
-        <button onclick="document.getElementById('debug-console').style.display='none'" style="background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.3); padding: 4px 8px; cursor: pointer; border-radius: 6px; font-size: 0.65rem;">Hide</button>
+        <button onclick="document.getElementById('debug-log-output').textContent = 'Console cleared...'" style="background: rgba(255,255,255,0.03); color: var(--text-secondary); border: 1px solid var(--border-color); padding: 4px 8px; cursor: pointer; border-radius: 6px; font-size: 0.65rem;">Clear</button>
+        <button onclick="document.getElementById('debug-console').style.display='none'" style="background: rgba(212, 175, 55, 0.15); color: var(--accent-gold); border: 1px solid rgba(212, 175, 55, 0.3); padding: 4px 8px; cursor: pointer; border-radius: 6px; font-size: 0.65rem;">Hide</button>
       </div>
     </div>
     <div id="debug-log-output" style="white-space: pre-wrap; word-wrap: break-word; line-height: 1.4;">Console initialized...</div>
@@ -1952,14 +2009,13 @@
         svgGraphic.style.transform = `rotate(-90deg) scale(${scale})`;
       }
     }
-
     function drawHandStencil(ctx, w, h) {
       ctx.save();
-      ctx.strokeStyle = "rgba(6, 182, 212, 0.35)";
+      ctx.strokeStyle = "rgba(212, 175, 55, 0.4)";
       ctx.lineWidth = 2.5;
       ctx.setLineDash([8, 6]);
       ctx.shadowBlur = 6;
-      ctx.shadowColor = "rgba(6, 182, 212, 0.15)";
+      ctx.shadowColor = "rgba(212, 175, 55, 0.15)";
       
       const centerX = w / 2;
       const centerY = h / 2 + h * 0.03;
@@ -1997,23 +2053,23 @@
       // Wrist right side
       ctx.lineTo(centerX + scale * 0.22, centerY + scale * 0.5);
       ctx.stroke();
-
+ 
       // Knuckle line
       ctx.beginPath();
       ctx.setLineDash([3, 3]);
-      ctx.strokeStyle = "rgba(59, 130, 246, 0.3)";
+      ctx.strokeStyle = "rgba(212, 175, 55, 0.25)";
       ctx.moveTo(centerX - scale * 0.18, centerY);
       ctx.lineTo(centerX + scale * 0.18, centerY);
       ctx.stroke();
       
-      ctx.fillStyle = "rgba(6, 182, 212, 0.4)";
+      ctx.fillStyle = "rgba(212, 175, 55, 0.55)";
       ctx.beginPath();
       ctx.arc(centerX - scale * 0.18, centerY, 5, 0, 2 * Math.PI);
       ctx.arc(centerX + scale * 0.18, centerY, 5, 0, 2 * Math.PI);
       ctx.fill();
-
-      ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
-      ctx.font = "600 11px 'Outfit', sans-serif";
+ 
+      ctx.fillStyle = "rgba(212, 175, 55, 0.65)";
+      ctx.font = "700 11px 'Montserrat', sans-serif";
       ctx.textAlign = "center";
       ctx.setLineDash([]);
       ctx.fillText("ALIGN KNUCKLES HERE", centerX, centerY + scale * 0.62);
@@ -2551,14 +2607,14 @@
       const wX = wrist.x * w;
       const wY = wrist.y * h;
 
-      const themeColor = isValid ? "rgba(6, 182, 212, 0.95)" : "rgba(239, 68, 68, 0.95)";
+      const themeColor = isValid ? "rgba(212, 175, 55, 0.95)" : "rgba(217, 83, 79, 0.95)";
 
       // Draw light tracking visualizer lines representing hand box
       overlayCtx.beginPath();
       overlayCtx.moveTo(iX, iY);
       overlayCtx.lineTo(wX, wY);
       overlayCtx.lineTo(pX, pY);
-      overlayCtx.strokeStyle = isValid ? "rgba(6, 182, 212, 0.2)" : "rgba(239, 68, 68, 0.15)";
+      overlayCtx.strokeStyle = isValid ? "rgba(212, 175, 55, 0.25)" : "rgba(217, 83, 79, 0.2)";
       overlayCtx.lineWidth = 2;
       overlayCtx.stroke();
 
@@ -2599,7 +2655,7 @@
         // Draw track
         overlayCtx.beginPath();
         overlayCtx.arc(midX, midY, 32, 0, 2 * Math.PI);
-        overlayCtx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+        overlayCtx.strokeStyle = "rgba(212, 175, 55, 0.1)";
         overlayCtx.lineWidth = 4;
         overlayCtx.stroke();
 
@@ -2608,14 +2664,14 @@
         const startAngle = -Math.PI / 2;
         const endAngle = startAngle + (2 * Math.PI * progressFraction);
         overlayCtx.arc(midX, midY, 32, startAngle, endAngle);
-        overlayCtx.strokeStyle = "#22d3ee";
+        overlayCtx.strokeStyle = "#d4af37";
         overlayCtx.lineWidth = 4;
         overlayCtx.lineCap = "round";
         overlayCtx.stroke();
 
         // Draw percentage text
-        overlayCtx.font = "bold 10px 'Outfit', sans-serif";
-        overlayCtx.fillStyle = "#22d3ee";
+        overlayCtx.font = "700 10px 'Montserrat', sans-serif";
+        overlayCtx.fillStyle = "#d4af37";
         overlayCtx.textAlign = "center";
         overlayCtx.fillText(Math.round(progressFraction * 100) + "%", midX, midY + 3.5);
       }
@@ -2664,22 +2720,23 @@
       }
       overlayCtx.closePath();
 
-      // Premium Cyan-Blue gradient style for circle stroke
+      // Premium Gold gradient style for circle stroke resembling a real gold bangle
       const grad = overlayCtx.createLinearGradient(0, 0, w, h);
-      grad.addColorStop(0, '#06b6d4');
-      grad.addColorStop(1, '#3b82f6');
+      grad.addColorStop(0, '#f5e2b3');
+      grad.addColorStop(0.5, '#d4af37');
+      grad.addColorStop(1, '#8a640f');
 
       overlayCtx.strokeStyle = grad;
       overlayCtx.lineWidth = 5;
       overlayCtx.shadowBlur = 12;
-      overlayCtx.shadowColor = "rgba(6, 182, 212, 0.4)";
+      overlayCtx.shadowColor = "rgba(212, 175, 55, 0.4)";
       overlayCtx.stroke();
       overlayCtx.shadowBlur = 0; // Reset
 
       // Draw sizing tag near the bangle circle center
       const [centerU, centerV] = project3DTo2D(center, activeProjectionMatrix, w, h);
-      overlayCtx.font = "bold 13px 'Outfit', sans-serif";
-      overlayCtx.fillStyle = "#ffffff";
+      overlayCtx.font = "700 12px 'Montserrat', sans-serif";
+      overlayCtx.fillStyle = "#fdfbf7";
       overlayCtx.textAlign = "center";
       overlayCtx.shadowBlur = 4;
       overlayCtx.shadowColor = "#000000";
