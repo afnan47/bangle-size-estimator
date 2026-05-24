@@ -292,67 +292,80 @@
     const errorModal = document.getElementById('error-modal');
 
     // ------------------------------------------------------------------------
-    // APPLICATION LIFECYCLE INITIALIZATION
+    // APPLICATION LIFECYCLE INITIALIZATION (CLEAN EDITED VERSION)
     // ------------------------------------------------------------------------
     document.addEventListener("DOMContentLoaded", () => {
+      // 1. Initialize onboarding mechanics & run layout check
       initCarousel();
-      document.getElementById('btn-exit-ar').addEventListener('click', stopAR);
-      document.getElementById('btn-recalibrate').addEventListener('click', recalibrate);
-      document.getElementById('btn-close-results').addEventListener('click', () => {
-        resultModal.classList.add('hidden');
-        screenOnboarding.classList.remove('hidden');
-        // Reset carousel back to slide 0 when exiting results screen
+      checkReturningUser();
+
+      // 2. Clean, declarative binding map for simple click triggers
+      const standardClickBindings = [
+        { id: 'btn-direct-scan', action: startAR },
+        { id: 'btn-exit-ar',     action: stopAR },
+        { id: 'btn-recalibrate', action: recalibrate }
+      ];
+
+      standardClickBindings.forEach(({ id, action }) => {
+        document.getElementById(id)?.addEventListener('click', action);
+      });
+
+      // 3. Handle complex view toggle navigations cleanly with optional chaining
+      document.getElementById('btn-view-instructions')?.addEventListener('click', () => {
+        const returningCard = document.getElementById('returning-user-card');
+        const carouselCard = document.getElementById('instructions-carousel-card');
+        
+        if (returningCard) { returningCard.style.display = 'none'; returningCard.classList.add('hidden'); }
+        if (carouselCard) { carouselCard.style.display = 'flex'; carouselCard.classList.remove('hidden'); }
+      });
+
+      document.getElementById('btn-close-results')?.addEventListener('click', () => {
+        document.getElementById('result-modal')?.classList.add('hidden');
+        document.getElementById('screen-onboarding')?.classList.remove('hidden');
+        
+        // Reset instructions track mechanics cleanly
         currentSlide = 0;
         const track = document.getElementById('carousel-track');
         if (track) track.style.transform = `translateX(0%)`;
-        const dots = document.querySelectorAll('.carousel-dot');
-        dots.forEach((dot, idx) => {
-          if (idx === 0) dot.classList.add('active');
-          else dot.classList.remove('active');
+        
+        document.querySelectorAll('.carousel-dot').forEach((dot, idx) => {
+          dot.classList.toggle('active', idx === 0);
         });
+        
         const btnNext = document.getElementById('btn-carousel-next');
         if (btnNext) btnNext.innerHTML = 'Next';
-      });
-      document.getElementById('btn-error-close').addEventListener('click', () => {
-        errorModal.classList.add('hidden');
-        screenOnboarding.classList.remove('hidden');
+        
+        checkReturningUser(); // Evaluate returning user elements
       });
 
-      // Attach click events to the sizing ruler ticks for interactive preview
+      document.getElementById('btn-error-close')?.addEventListener('click', () => {
+        document.getElementById('error-modal')?.classList.add('hidden');
+        document.getElementById('screen-onboarding')?.classList.remove('hidden');
+        checkReturningUser();
+      });
+
+      // 4. Interactive preview ruler ticks mapping
       BANGLE_SIZES.forEach(sz => {
-        const id = `tick-${sz.size.replace('.', '-')}`;
-        const el = document.getElementById(id);
-        if (el) {
-          el.addEventListener('click', () => {
-            selectBangleSize(sz.size);
-          });
-        }
+        document.getElementById(`tick-${sz.size.replace('.', '-')}`)
+          ?.addEventListener('click', () => selectBangleSize(sz.size));
       });
 
-      // Feedback button Yes click handler
-      document.getElementById('btn-feedback-yes').addEventListener('click', () => {
+      // 5. Customer Feedback Panels UI loops
+      document.getElementById('btn-feedback-yes')?.addEventListener('click', () => {
         localStorage.setItem('bangle_sizer_calibration_scale', calibrationScale.toString());
-        console.log(`Feedback confirmed: Bangle size correct. Calibration scale: ${calibrationScale.toFixed(4)}`);
+        console.log(`Feedback confirmed: Scale saved -> ${calibrationScale.toFixed(4)}`);
 
-        // Hide Yes/No buttons and show success message
-        document.querySelector('.feedback-buttons-row').classList.add('hidden');
-        document.getElementById('feedback-sizes-container').classList.add('hidden');
-        document.getElementById('feedback-success-msg').classList.remove('hidden');
-        document.querySelector('.feedback-question').classList.add('hidden');
+        document.querySelector('.feedback-buttons-row')?.classList.add('hidden');
+        document.getElementById('feedback-sizes-container')?.classList.add('hidden');
+        document.getElementById('feedback-success-msg')?.classList.remove('hidden');
+        document.querySelector('.feedback-question')?.classList.add('hidden');
       });
 
-      // Feedback button No click handler — slide in size correction grid below
-      document.getElementById('btn-feedback-no').addEventListener('click', () => {
-        const sizesContainer = document.getElementById('feedback-sizes-container');
-        if (sizesContainer.classList.contains('hidden')) {
-          // Re-trigger animation by removing and re-adding element
-          sizesContainer.classList.remove('hidden');
-        }
+      document.getElementById('btn-feedback-no')?.addEventListener('click', () => {
+        document.getElementById('feedback-sizes-container')?.classList.remove('hidden');
       });
 
-      // Interactive feedback size pills (circle buttons) click handler
-      const sizePills = document.querySelectorAll('.btn-feedback-circle');
-      sizePills.forEach(pill => {
+      document.querySelectorAll('.btn-feedback-circle').forEach(pill => {
         pill.addEventListener('click', (e) => {
           const correctSize = e.target.getAttribute('data-size');
           const recommendation = BANGLE_SIZES.find(sz => sz.size === correctSize);
@@ -360,46 +373,34 @@
 
           const targetWidth = recommendation.diameterMM + 2.0;
           if (lastUncalibratedSmoothedWidth > 10.0) {
-            const newScale = targetWidth / lastUncalibratedSmoothedWidth;
-            calibrationScale = newScale;
-            localStorage.setItem('bangle_sizer_calibration_scale', newScale.toString());
-            console.log(`Feedback corrected: target size ${correctSize} (${targetWidth.toFixed(1)}mm). New calibration scale: ${newScale.toFixed(4)}`);
+            calibrationScale = targetWidth / lastUncalibratedSmoothedWidth;
+            localStorage.setItem('bangle_sizer_calibration_scale', calibrationScale.toString());
           }
 
-          sizePills.forEach(p => p.classList.remove('selected'));
+          document.querySelectorAll('.btn-feedback-circle').forEach(p => p.classList.remove('selected'));
           e.target.classList.add('selected');
-
           selectBangleSize(correctSize);
 
-          // Hide the whole feedback panel interaction and show success
-          document.querySelector('.feedback-buttons-row').classList.add('hidden');
-          document.getElementById('feedback-sizes-container').classList.add('hidden');
-          document.getElementById('feedback-success-msg').classList.remove('hidden');
-          document.querySelector('.feedback-question').classList.add('hidden');
+          document.querySelector('.feedback-buttons-row')?.classList.add('hidden');
+          document.getElementById('feedback-sizes-container')?.classList.add('hidden');
+          document.getElementById('feedback-success-msg')?.classList.remove('hidden');
+          document.querySelector('.feedback-question')?.classList.add('hidden');
         });
       });
       
-      // Initialize drawing layer canvas sizes
+      // 6. Graphics & simulation setups
       overlayCanvas = document.getElementById('overlay-canvas');
-      overlayCtx = overlayCanvas.getContext('2d');
+      if (overlayCanvas) overlayCtx = overlayCanvas.getContext('2d');
       window.addEventListener('resize', resizeOverlayCanvas);
 
-      // Simulate Scan button listener (PC Test mode)
-      const simBtn = document.getElementById('btn-simulate-scan');
-      if (simBtn) {
-        simBtn.addEventListener('click', startSimulatedScan);
-      }
+      document.getElementById('btn-simulate-scan')?.addEventListener('click', startSimulatedScan);
 
-      // Configure debug console and simulation testbed visibility based on environment
-      const debugBtn = document.getElementById('btn-toggle-debug');
-      const testbedToggle = document.getElementById('btn-toggle-testbed');
-      
       if (isLocalTest()) {
-        if (debugBtn) debugBtn.style.display = 'block';
-        if (testbedToggle) testbedToggle.style.display = 'block';
+        document.getElementById('btn-toggle-debug').style.display = 'block';
+        document.getElementById('btn-toggle-testbed').style.display = 'block';
       } else {
-        if (debugBtn) debugBtn.style.display = 'none';
-        if (testbedToggle) testbedToggle.style.display = 'none';
+        document.getElementById('btn-toggle-debug').style.display = 'none';
+        document.getElementById('btn-toggle-testbed').style.display = 'none';
       }
     });
 
@@ -887,6 +888,37 @@
 
     let currentSlide = 0;
     const totalSlides = 3;
+    
+    // ------------------------------------------------------------------------
+    // RETURNING USER NAVIGATION GATE
+    // ------------------------------------------------------------------------
+    function checkReturningUser() {
+      const isReturning = localStorage.getItem('bangle_sizer_returning_user');
+      const returningCard = document.getElementById('returning-user-card');
+      const carouselCard = document.getElementById('instructions-carousel-card');
+
+      if (!returningCard || !carouselCard) return;
+
+      if (isReturning === 'true') {
+        // Show Welcome Back Card
+        returningCard.classList.remove('hidden');
+        returningCard.style.display = 'block';
+
+        // Hide Carousel Instructions Card
+        carouselCard.classList.add('hidden');
+        carouselCard.style.display = 'none';
+        console.log("Gate Check: Returning user active. Direct scan shortcut visible.");
+      } else {
+        // Hide Welcome Back Card
+        returningCard.classList.add('hidden');
+        returningCard.style.display = 'none';
+
+        // Show Carousel Instructions Card
+        carouselCard.classList.remove('hidden');
+        carouselCard.style.display = 'flex'; // Preserves the card flex alignment layout
+        console.log("Gate Check: New visitor tracking. Carousel onboarding visible.");
+      }
+    }
 
     function initCarousel() {
       const track = document.getElementById('carousel-track');
@@ -899,6 +931,7 @@
           currentSlide++;
           updateCarousel();
         } else {
+          localStorage.setItem('bangle_sizer_returning_user', 'true');
           startAR();
         }
       };
@@ -1576,7 +1609,9 @@
     function lockCalibration(finalKnuckleWidth) {
       calibrationLocked = true;
       updateHUD("Success", `${(finalKnuckleWidth / 10).toFixed(2)} cm`, 100, "Measurement Locked!");
-
+      
+      // Mark the user as a returning user since they completed a successful scan
+      localStorage.setItem('bangle_sizer_returning_user', 'true');
       // Recommend Bangle size
       const recommendation = getRecommendedBangleSize(finalKnuckleWidth);
       
