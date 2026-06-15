@@ -101,8 +101,8 @@
         for (let trial = 0; trial < numTrials; trial++) {
           const baseKalman = new KnuckleKalmanFilter();
           const upKalman = new KnuckleKalmanFilter();
-          const upFilterP5 = new OneEuroFilter3D(30, 0.5, 0.005, 1.0);
-          const upFilterP17 = new OneEuroFilter3D(30, 0.5, 0.005, 1.0);
+          const upFilterP5 = new OneEuroFilter3D(30, 1.0, 0.0005, 1.0);
+          const upFilterP17 = new OneEuroFilter3D(30, 1.0, 0.0005, 1.0);
 
           let baseStableCount = 0;
           let baseLockedWidth = null;

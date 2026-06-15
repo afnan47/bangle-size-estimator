@@ -77,16 +77,48 @@
             mapsBtn.href = storeMapsUrl;
         }
 
-        // 2. Build the WhatsApp Window Redirect for the Right Segment
+        // 2. Wire up the WhatsApp Share Option Modal for the Right Segment
         if (shareBtn) {
             shareBtn.onclick = (e) => {
                 e.preventDefault();
-                
-                const baseShareMessage = `Hey! I just scanned my hand using the Saubhagya Bangles virtual sizer. My perfect size is ${detectedSize}! Let's go visit their boutique together soon: 📍 ${storeMapsUrl}`;
-                const encodedPayload = encodeURIComponent(baseShareMessage);
-                const whatsappDeepLink = `https://api.whatsapp.com/send?text=${encodedPayload}`;
-                
+                const shareModal = document.getElementById('share-option-modal');
+                if (shareModal) {
+                    shareModal.classList.remove('hidden');
+                }
+            };
+        }
+
+        // Wire up the inner buttons of the Share Modal
+        const shareModal = document.getElementById('share-option-modal');
+        const closeShareBtn = document.getElementById('btn-close-share-options');
+        if (closeShareBtn && shareModal) {
+            closeShareBtn.onclick = (e) => {
+                e.preventDefault();
+                shareModal.classList.add('hidden');
+            };
+        }
+
+        const giftBtn = document.getElementById('btn-share-gift');
+        const inviteBtn = document.getElementById('btn-share-invite');
+        const appUrl = window.location.origin + window.location.pathname;
+
+        if (giftBtn) {
+            giftBtn.onclick = (e) => {
+                e.preventDefault();
+                const giftMessage = `Hint hint! 🎁 I just measured my hand using Saubhagya Bangles' AR size estimator and my perfect size is ${detectedSize}! 💍 In case you were looking for gift ideas! 😉 Try it yourself or visit their boutique here:\n📍 Physical Shop: ${storeMapsUrl}\n📱 Measure at home: ${appUrl}`;
+                const whatsappDeepLink = `https://api.whatsapp.com/send?text=${encodeURIComponent(giftMessage)}`;
                 window.open(whatsappDeepLink, '_blank');
+                if (shareModal) shareModal.classList.add('hidden');
+            };
+        }
+
+        if (inviteBtn) {
+            inviteBtn.onclick = (e) => {
+                e.preventDefault();
+                const inviteMessage = `Guess what? I'm a size ${detectedSize} in bangles! ✨ I measured it at home using Saubhagya Bangles' AR sizer. You should find your size too so we can go shopping together! 🛍️\n📍 Boutique Location: ${storeMapsUrl}\n📱 Try the AR Sizer: ${appUrl}`;
+                const whatsappDeepLink = `https://api.whatsapp.com/send?text=${encodeURIComponent(inviteMessage)}`;
+                window.open(whatsappDeepLink, '_blank');
+                if (shareModal) shareModal.classList.add('hidden');
             };
         }
     }

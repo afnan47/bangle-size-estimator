@@ -137,8 +137,14 @@
         const unitNormal = normalizeVector(normalVec);
 
         if (magnitude(unitNormal) > 0.1) {
+          // Amplify X and Y deviation from camera axis by 2.0x for subconscious leveling
+          const ampX = unitNormal[0] * 2.0;
+          const ampY = unitNormal[1] * 2.0;
+          const ampZ = unitNormal[2];
+          const ampNormal = normalizeVector([ampX, ampY, ampZ]);
+
           uDir = normalizeVector(v1);
-          wDir = normalizeVector(crossProduct(uDir, unitNormal));
+          wDir = normalizeVector(crossProduct(uDir, ampNormal));
           isCoplanarAligned = true;
         }
       }
@@ -181,10 +187,29 @@
       }
       overlayCtx.closePath();
 
-      // Premium Gold gradient style for circle stroke resembling a real gold bangle
-      const grad = overlayCtx.createLinearGradient(0, 0, w, h);
-      grad.addColorStop(0, '#f5e2b3');
-      grad.addColorStop(0.5, '#d4af37');
+      const [centerU, centerV] = project3DTo2D(center, activeProjectionMatrix, w, h);
+      
+      // Calculate radius in pixels for correct gradient scaling
+      let radiusPixels = 50;
+      if (circlePoints.length > 0) {
+        const dx = circlePoints[0][0] - centerU;
+        const dy = circlePoints[0][1] - centerV;
+        radiusPixels = Math.sqrt(dx * dx + dy * dy);
+      }
+
+      // Shimmering effect over time using Date.now() for smooth linear gradient animation
+      const shimmer = (Date.now() / 2000) % 1.0;
+      const grad = overlayCtx.createLinearGradient(
+        centerU - radiusPixels * 1.5, 
+        centerV - radiusPixels * 1.5, 
+        centerU + radiusPixels * 1.5, 
+        centerV + radiusPixels * 1.5
+      );
+      
+      grad.addColorStop(0, '#8a640f');
+      grad.addColorStop((shimmer + 0.2) % 1.0, '#f5e2b3');
+      grad.addColorStop((shimmer + 0.5) % 1.0, '#d4af37');
+      grad.addColorStop((shimmer + 0.8) % 1.0, '#f5e2b3');
       grad.addColorStop(1, '#8a640f');
 
       overlayCtx.strokeStyle = grad;
@@ -195,7 +220,6 @@
       overlayCtx.shadowBlur = 0; // Reset
 
       // Draw sizing tag near the bangle circle center
-      const [centerU, centerV] = project3DTo2D(center, activeProjectionMatrix, w, h);
       overlayCtx.font = "700 12px 'Montserrat', sans-serif";
       overlayCtx.fillStyle = "#fdfbf7";
       overlayCtx.textAlign = "center";

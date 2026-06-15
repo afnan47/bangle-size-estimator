@@ -21,6 +21,7 @@
     let isProcessingHand = false;
     let calibrationLocked = false;
     let stableMeasurementCount = 0;
+    let unstableFrameCount = 0; // Tracks consecutive unstable frames for grace period
     let activeProjectionMatrix = null;
     
     const kalmanFilter = new KnuckleKalmanFilter();
@@ -32,8 +33,8 @@
     let lastValidHandPositions = null; // Stores [{x_view, y_view, z_view}, ...] for rendering bangle circles
 
     // One-Euro Filters for knuckle landmarks 5 & 17
-    const filterP5 = new OneEuroFilter3D(30, 0.5, 0.005, 1.0);
-    const filterP17 = new OneEuroFilter3D(30, 0.5, 0.005, 1.0);
+    const filterP5 = new OneEuroFilter3D(30, 1.0, 0.0005, 1.0);
+    const filterP17 = new OneEuroFilter3D(30, 1.0, 0.0005, 1.0);
     let isUpgradedSizerMode = true; // Enabled by default, can be toggled by the testbed simulation
     let isSimulationTestbedRunning = false;
 

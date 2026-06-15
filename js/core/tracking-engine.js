@@ -1,5 +1,25 @@
 // TRACKING HANDLER & STABILITY ENGINE
     // ------------------------------------------------------------------------
+    function handleUnstableFrame(message, landmarks, displayWidth = "-.- cm") {
+      unstableFrameCount++;
+      // Grace period: 1.0 seconds at ~20 FPS is 20 frames
+      if (unstableFrameCount > 20) {
+        stableMeasurementCount = Math.max(0, stableMeasurementCount - 1);
+      }
+      
+      const progressPct = Math.round((stableMeasurementCount / REQUIRED_STABLE_FRAMES) * 100);
+      
+      if (landmarks) {
+        drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
+      }
+      
+      // If within grace period, show (Paused) in the message
+      const isPaused = unstableFrameCount <= 20 && stableMeasurementCount > 0;
+      const displayMessage = isPaused ? `⏳ Hold still (Paused)... ${message}` : message;
+      
+      updateHUD("Unstable", displayWidth, progressPct, displayMessage, true);
+    }
+
     function processHandLandmarks(landmarks) {
       if (!xrDepthInfo && !isWebcamDemo && !isSimulationTestbedRunning) {
         updateHUD("Searching...", "-.- cm", 0, "Initializing depth engine... hold phone steady.");
@@ -59,17 +79,13 @@
 
       // Safeguard 1: Check if hand is too close to camera (ideal range is >15cm/0.15m)
       if (depth5 <= 0.15 || depth17 <= 0.15) {
-        stableMeasurementCount = Math.max(0, stableMeasurementCount - 1);
-        drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
-        updateHUD("Unstable", "-.- cm", getProgressPct(), "⚠️ Move hand further away (10-15 inches is ideal)", true);
+        handleUnstableFrame("⚠️ Move hand further away (10-15 inches is ideal)", landmarks);
         return;
       }
 
       // Safeguard 2: Check if hand is too far from camera (ideal range is <1.0m)
       if (depth5 > 1.0 || depth17 > 1.0) {
-        stableMeasurementCount = Math.max(0, stableMeasurementCount - 1);
-        drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
-        updateHUD("Unstable", "-.- cm", getProgressPct(), "⚠️ Move hand closer to the camera (under 3 feet)", true);
+        handleUnstableFrame("⚠️ Move hand closer to the camera (under 3 feet)", landmarks);
         return;
       }
 
@@ -89,16 +105,11 @@
       // Safeguard 3: Check if hand is tilted
       const isTilted = isUpgradedSizerMode ? (palmPitchDeg > 15) : (Math.abs(depth5 - depth17) > 0.08);
       if (isTilted) {
-        stableMeasurementCount = Math.max(0, stableMeasurementCount - 1);
-        drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
-        updateHUD(
-          "Unstable", 
-          "-.- cm", 
-          getProgressPct(), 
+        handleUnstableFrame(
           isUpgradedSizerMode 
             ? `⚠️ Keep hand flat. Hand tilted: ${palmPitchDeg.toFixed(0)}° (Max 15°)`
             : "⚠️ Keep hand flat. Do not tilt your hand.", 
-          true
+          landmarks
         );
         return;
       }
@@ -113,9 +124,7 @@
 
       // Safeguard 4: Ignore out-of-bounds size measurements (human knuckles usually 50-80mm)
       if (rawWidthMM < 42 || rawWidthMM > 88) {
-        stableMeasurementCount = Math.max(0, stableMeasurementCount - 1);
-        drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
-        updateHUD("Unstable", "-.- cm", getProgressPct(), "⚠️ Knuckles misaligned. Squeeze hand tightly.", true);
+        handleUnstableFrame("⚠️ Knuckles misaligned. Squeeze hand tightly.", landmarks);
         return;
       }
 
@@ -133,6 +142,7 @@
       // Safeguard 5: Check stability (variance < 1.5mm allows normal camera noise and hand micro-shakes)
       if (variance < 1.5) {
         stableMeasurementCount++;
+        unstableFrameCount = 0; // Reset grace period counter!
         // Save knuckle tracking for bangle overlay projection
         lastValidHandPositions = { p5: p5_3d, p17: p17_3d, wrist: p0_3d };
         
@@ -151,18 +161,9 @@
           lockCalibration(smoothedKnuckleWidth);
         }
       } else {
-        // Decay calibration progress gradually rather than clearing it instantly on single noisy frame
-        stableMeasurementCount = Math.max(0, stableMeasurementCount - 3);
+        // High variance/jitter detected
         lastValidHandPositions = null;
-        
-        drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
-        updateHUD(
-          "Unstable", 
-          `${(calibratedWidth / 10).toFixed(2)} cm`, 
-          getProgressPct(), 
-          "⚠️ Movement detected. Hold hand completely still!", 
-          true
-        );
+        handleUnstableFrame("⚠️ Movement detected. Hold hand completely still!", landmarks, `${(calibratedWidth / 10).toFixed(2)} cm`);
       }
     }
 
@@ -185,7 +186,7 @@
       }, 500);
       if (typeof updateStoreFunnels === 'function') {
         // Pass the final calibrated size string (e.g., "2.6") to the button handler
-        updateStoreFunnels(identifiedSize || "2.6"); 
+        updateStoreFunnels(recommendation.size || "2.6"); 
       }
       
     }

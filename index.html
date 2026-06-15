@@ -284,6 +284,41 @@
     </div>
   </section>
 
+  <!-- 3.5. WHATSAPP SHARE OPTION MODAL -->
+  <section id="share-option-modal" class="screen hidden" style="background: rgba(10, 1, 4, 0.94); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); display: flex; justify-content: center; align-items: center; z-index: 110;">
+    <div class="card share-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 32px; padding: 32px 24px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.05); animation: scaleUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);">
+      <h3 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 500; color: var(--text-primary); margin-bottom: 8px; letter-spacing: 0.02em;">Share Your Size</h3>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 24px;">Choose how you want to share your result on WhatsApp:</p>
+      
+      <!-- Option cards -->
+      <div class="share-options-list" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
+        <!-- Option 1: Gift Hint -->
+        <div id="btn-share-gift" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 18px; padding: 18px; text-align: left; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: flex-start; gap: 14px;">
+          <div style="background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 12px; width: 44px; height: 44px; display: flex; justify-content: center; align-items: center; color: var(--accent-gold); flex-shrink: 0;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2" ry="2"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M7.5 8H12V3.5a2.5 2.5 0 0 0-5 0c0 1.5 1.5 3.5 2.5 4.5z"/><path d="M16.5 8H12V3.5a2.5 2.5 0 0 1 5 0c0 1.5-1.5 3.5-2.5 4.5z"/></svg>
+          </div>
+          <div>
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">🎁 Send Gift Hint</h4>
+            <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.3;">Drop a subtle hint to your partner or family for birthdays, anniversaries, or surprises.</p>
+          </div>
+        </div>
+
+        <!-- Option 2: Friend Invite -->
+        <div id="btn-share-invite" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 18px; padding: 18px; text-align: left; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: flex-start; gap: 14px;">
+          <div style="background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 12px; width: 44px; height: 44px; display: flex; justify-content: center; align-items: center; color: var(--accent-gold); flex-shrink: 0;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div>
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">✨ Share & Invite Friends</h4>
+            <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.3;">Share your size, prompt friends to try the AR sizer, and plan a boutique visit together.</p>
+          </div>
+        </div>
+      </div>
+
+      <button id="btn-close-share-options" class="btn btn-secondary" style="width: 100%;">Cancel</button>
+    </div>
+  </section>
+
   <!-- 4. ERRORS & FALLBACK OVERLAY -->
   <section id="error-modal" class="screen hidden">
     <div class="card error-card">

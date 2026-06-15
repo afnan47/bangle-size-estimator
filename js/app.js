@@ -251,6 +251,7 @@
     let isProcessingHand = false;
     let calibrationLocked = false;
     let stableMeasurementCount = 0;
+    let unstableFrameCount = 0; // Tracks consecutive unstable frames for grace period
     let activeProjectionMatrix = null;
     
     const kalmanFilter = new KnuckleKalmanFilter();
@@ -262,8 +263,8 @@
     let lastValidHandPositions = null; // Stores [{x_view, y_view, z_view}, ...] for rendering bangle circles
 
     // One-Euro Filters for knuckle landmarks 5 & 17
-    const filterP5 = new OneEuroFilter3D(30, 0.5, 0.005, 1.0);
-    const filterP17 = new OneEuroFilter3D(30, 0.5, 0.005, 1.0);
+    const filterP5 = new OneEuroFilter3D(30, 1.0, 0.0005, 1.0);
+    const filterP17 = new OneEuroFilter3D(30, 1.0, 0.0005, 1.0);
     let isUpgradedSizerMode = true; // Enabled by default, can be toggled by the testbed simulation
     let isSimulationTestbedRunning = false;
 
@@ -613,7 +614,7 @@
           drawBangleStaticOverlay();
         } else if (isSimulatingScan) {
           drawSimulatedFrame();
-        } else if (!isProcessingHand) {
+        } else if (!isProcessingHand && (frameCount % 3 === 0)) {
           isProcessingHand = true;
           handsDetector.send({ image: video }).finally(() => {
             isProcessingHand = false;
@@ -969,16 +970,48 @@
             mapsBtn.href = storeMapsUrl;
         }
 
-        // 2. Build the WhatsApp Window Redirect for the Right Segment
+        // 2. Wire up the WhatsApp Share Option Modal for the Right Segment
         if (shareBtn) {
             shareBtn.onclick = (e) => {
                 e.preventDefault();
-                
-                const baseShareMessage = `Hey! I just scanned my hand using the Saubhagya Bangles virtual sizer. My perfect size is ${detectedSize}! Let's go visit their boutique together soon: 📍 ${storeMapsUrl}`;
-                const encodedPayload = encodeURIComponent(baseShareMessage);
-                const whatsappDeepLink = `https://api.whatsapp.com/send?text=${encodedPayload}`;
-                
+                const shareModal = document.getElementById('share-option-modal');
+                if (shareModal) {
+                    shareModal.classList.remove('hidden');
+                }
+            };
+        }
+
+        // Wire up the inner buttons of the Share Modal
+        const shareModal = document.getElementById('share-option-modal');
+        const closeShareBtn = document.getElementById('btn-close-share-options');
+        if (closeShareBtn && shareModal) {
+            closeShareBtn.onclick = (e) => {
+                e.preventDefault();
+                shareModal.classList.add('hidden');
+            };
+        }
+
+        const giftBtn = document.getElementById('btn-share-gift');
+        const inviteBtn = document.getElementById('btn-share-invite');
+        const appUrl = window.location.origin + window.location.pathname;
+
+        if (giftBtn) {
+            giftBtn.onclick = (e) => {
+                e.preventDefault();
+                const giftMessage = `Hint hint! 🎁 I just measured my hand using Saubhagya Bangles' AR size estimator and my perfect size is ${detectedSize}! 💍 In case you were looking for gift ideas! 😉 Try it yourself or visit their boutique here:\n📍 Physical Shop: ${storeMapsUrl}\n📱 Measure at home: ${appUrl}`;
+                const whatsappDeepLink = `https://api.whatsapp.com/send?text=${encodeURIComponent(giftMessage)}`;
                 window.open(whatsappDeepLink, '_blank');
+                if (shareModal) shareModal.classList.add('hidden');
+            };
+        }
+
+        if (inviteBtn) {
+            inviteBtn.onclick = (e) => {
+                e.preventDefault();
+                const inviteMessage = `Guess what? I'm a size ${detectedSize} in bangles! ✨ I measured it at home using Saubhagya Bangles' AR sizer. You should find your size too so we can go shopping together! 🛍️\n📍 Boutique Location: ${storeMapsUrl}\n📱 Try the AR Sizer: ${appUrl}`;
+                const whatsappDeepLink = `https://api.whatsapp.com/send?text=${encodeURIComponent(inviteMessage)}`;
+                window.open(whatsappDeepLink, '_blank');
+                if (shareModal) shareModal.classList.add('hidden');
             };
         }
     }
@@ -1300,6 +1333,8 @@
       // Request next frame immediately to maintain ARCore lifecycle
       xrSession.requestAnimationFrame((t, f) => onXRFrame(t, f, gl));
 
+      frameCount++;
+
       const pose = frame.getViewerPose(xrRefSpace);
       if (pose && pose.views.length > 0) {
         const view = pose.views[0];
@@ -1341,8 +1376,8 @@
         // Step 1: Capture frame pixels for computer vision using the camera texture
         const frameCanvas = extractWebXRFrame(gl, frame, xrSession, cameraTexture);
 
-        // Step 2: Feed into MediaPipe async detector (with processing lock to prevent lag)
-        if (frameCanvas && !isProcessingHand) {
+        // Step 2: Feed into MediaPipe async detector (with processing lock and 3-frame throttle to prevent lag)
+        if (frameCanvas && !isProcessingHand && (frameCount % 3 === 0)) {
           isProcessingHand = true;
           detectHandLandmarks(frameCanvas, view).finally(() => {
             isProcessingHand = false;
@@ -1650,7 +1685,7 @@
       }, 500);
       if (typeof updateStoreFunnels === 'function') {
         // Pass the final calibrated size string (e.g., "2.6") to the button handler
-        updateStoreFunnels(identifiedSize || "2.6"); 
+        updateStoreFunnels(recommendation.size || "2.6"); 
       }
       
     }
@@ -1807,8 +1842,14 @@
         const unitNormal = normalizeVector(normalVec);
 
         if (magnitude(unitNormal) > 0.1) {
+          // Amplify X and Y deviation from camera axis by 2.0x for subconscious leveling
+          const ampX = unitNormal[0] * 2.0;
+          const ampY = unitNormal[1] * 2.0;
+          const ampZ = unitNormal[2];
+          const ampNormal = normalizeVector([ampX, ampY, ampZ]);
+
           uDir = normalizeVector(v1);
-          wDir = normalizeVector(crossProduct(uDir, unitNormal));
+          wDir = normalizeVector(crossProduct(uDir, ampNormal));
           isCoplanarAligned = true;
         }
       }
@@ -1851,10 +1892,29 @@
       }
       overlayCtx.closePath();
 
-      // Premium Gold gradient style for circle stroke resembling a real gold bangle
-      const grad = overlayCtx.createLinearGradient(0, 0, w, h);
-      grad.addColorStop(0, '#f5e2b3');
-      grad.addColorStop(0.5, '#d4af37');
+      const [centerU, centerV] = project3DTo2D(center, activeProjectionMatrix, w, h);
+      
+      // Calculate radius in pixels for correct gradient scaling
+      let radiusPixels = 50;
+      if (circlePoints.length > 0) {
+        const dx = circlePoints[0][0] - centerU;
+        const dy = circlePoints[0][1] - centerV;
+        radiusPixels = Math.sqrt(dx * dx + dy * dy);
+      }
+
+      // Shimmering effect over time using Date.now() for smooth linear gradient animation
+      const shimmer = (Date.now() / 2000) % 1.0;
+      const grad = overlayCtx.createLinearGradient(
+        centerU - radiusPixels * 1.5, 
+        centerV - radiusPixels * 1.5, 
+        centerU + radiusPixels * 1.5, 
+        centerV + radiusPixels * 1.5
+      );
+      
+      grad.addColorStop(0, '#8a640f');
+      grad.addColorStop((shimmer + 0.2) % 1.0, '#f5e2b3');
+      grad.addColorStop((shimmer + 0.5) % 1.0, '#d4af37');
+      grad.addColorStop((shimmer + 0.8) % 1.0, '#f5e2b3');
       grad.addColorStop(1, '#8a640f');
 
       overlayCtx.strokeStyle = grad;
@@ -1865,7 +1925,6 @@
       overlayCtx.shadowBlur = 0; // Reset
 
       // Draw sizing tag near the bangle circle center
-      const [centerU, centerV] = project3DTo2D(center, activeProjectionMatrix, w, h);
       overlayCtx.font = "700 12px 'Montserrat', sans-serif";
       overlayCtx.fillStyle = "#fdfbf7";
       overlayCtx.textAlign = "center";
@@ -1990,8 +2049,8 @@
         for (let trial = 0; trial < numTrials; trial++) {
           const baseKalman = new KnuckleKalmanFilter();
           const upKalman = new KnuckleKalmanFilter();
-          const upFilterP5 = new OneEuroFilter3D(30, 0.5, 0.005, 1.0);
-          const upFilterP17 = new OneEuroFilter3D(30, 0.5, 0.005, 1.0);
+          const upFilterP5 = new OneEuroFilter3D(30, 1.0, 0.0005, 1.0);
+          const upFilterP17 = new OneEuroFilter3D(30, 1.0, 0.0005, 1.0);
 
           let baseStableCount = 0;
           let baseLockedWidth = null;

@@ -156,7 +156,7 @@
           drawBangleStaticOverlay();
         } else if (isSimulatingScan) {
           drawSimulatedFrame();
-        } else if (!isProcessingHand) {
+        } else if (!isProcessingHand && (frameCount % 3 === 0)) {
           isProcessingHand = true;
           handsDetector.send({ image: video }).finally(() => {
             isProcessingHand = false;
@@ -212,8 +212,8 @@
 
     function recalibrate() {
       calibrationLocked = false;
-      isProcessingHand = false;
       stableMeasurementCount = 0;
+      unstableFrameCount = 0;
       kalmanFilter.reset(60.0);
       lastValidHandPositions = null;
       if (overlayCtx && overlayCanvas) {

@@ -6,6 +6,8 @@
       // Request next frame immediately to maintain ARCore lifecycle
       xrSession.requestAnimationFrame((t, f) => onXRFrame(t, f, gl));
 
+      frameCount++;
+
       const pose = frame.getViewerPose(xrRefSpace);
       if (pose && pose.views.length > 0) {
         const view = pose.views[0];
@@ -47,8 +49,8 @@
         // Step 1: Capture frame pixels for computer vision using the camera texture
         const frameCanvas = extractWebXRFrame(gl, frame, xrSession, cameraTexture);
 
-        // Step 2: Feed into MediaPipe async detector (with processing lock to prevent lag)
-        if (frameCanvas && !isProcessingHand) {
+        // Step 2: Feed into MediaPipe async detector (with processing lock and 3-frame throttle to prevent lag)
+        if (frameCanvas && !isProcessingHand && (frameCount % 3 === 0)) {
           isProcessingHand = true;
           detectHandLandmarks(frameCanvas, view).finally(() => {
             isProcessingHand = false;

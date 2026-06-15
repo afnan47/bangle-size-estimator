@@ -327,3 +327,14 @@
   margin-bottom: 24px;
 }
 
+#btn-share-gift, #btn-share-invite {
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+#btn-share-gift:hover, #btn-share-invite:hover {
+  background: rgba(212, 175, 55, 0.06) !important;
+  border-color: var(--accent-gold) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15);
+}
+
