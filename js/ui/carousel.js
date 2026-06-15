@@ -1,0 +1,193 @@
+// RETURNING USER NAVIGATION GATE
+    // ------------------------------------------------------------------------
+    function checkReturningUser() {
+      const isReturning = localStorage.getItem('bangle_sizer_returning_user');
+      const returningCard = document.getElementById('returning-user-card');
+      const carouselCard = document.getElementById('instructions-carousel-card');
+
+      if (!returningCard || !carouselCard) return;
+
+      if (isReturning === 'true') {
+        // Show Welcome Back Card
+        returningCard.classList.remove('hidden');
+        returningCard.style.display = 'block';
+
+        // Hide Carousel Instructions Card
+        carouselCard.classList.add('hidden');
+        carouselCard.style.display = 'none';
+      } else {
+        // Hide Welcome Back Card
+        returningCard.classList.add('hidden');
+        returningCard.style.display = 'none';
+
+        // Show Carousel Instructions Card
+        carouselCard.classList.remove('hidden');
+        carouselCard.style.display = 'flex'; // Preserves the card flex alignment layout
+      }
+    }
+
+    function initCarousel() {
+      const track = document.getElementById('carousel-track');
+      const dots = document.querySelectorAll('.carousel-dot');
+      const btnNext = document.getElementById('btn-carousel-next');
+      if (!track || !btnNext) return;
+
+      btnNext.onclick = () => {
+        if (currentSlide < totalSlides - 1) {
+          currentSlide++;
+          updateCarousel();
+        } else {
+          localStorage.setItem('bangle_sizer_returning_user', 'true');
+          startAR();
+        }
+      };
+
+      dots.forEach((dot, idx) => {
+        dot.onclick = () => {
+          currentSlide = idx;
+          updateCarousel();
+        };
+      });
+
+      function updateCarousel() {
+        track.style.transform = `translateX(-${(currentSlide * 100) / totalSlides}%)`;
+        dots.forEach((d, idx) => {
+          if (idx === currentSlide) d.classList.add('active');
+          else d.classList.remove('active');
+        });
+
+        if (currentSlide === totalSlides - 1) {
+          btnNext.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg> Start AR Sizer`;
+        } else {
+          btnNext.innerHTML = 'Next';
+        }
+      }
+    }
+
+    // --- PASTE THIS NEW STANDALONE FUNCTION AT THE BOTTOM OF YOUR FILE ---
+
+    function updateStoreFunnels(detectedSize) {
+        const mapsBtn = document.getElementById('btn-maps-navigation');
+        const shareBtn = document.getElementById('btn-share-bangle-size');
+        const storeMapsUrl = "https://maps.app.goo.gl/o3iS41VXG6iFXY6s9"; 
+
+        // 1. Synchronize the Left Segment (Maps Route)
+        if (mapsBtn) {
+            mapsBtn.innerText = `📍 Find Size ${detectedSize}`;
+            mapsBtn.href = storeMapsUrl;
+        }
+
+        // 2. Build the WhatsApp Window Redirect for the Right Segment
+        if (shareBtn) {
+            shareBtn.onclick = (e) => {
+                e.preventDefault();
+                
+                const baseShareMessage = `Hey! I just scanned my hand using the Saubhagya Bangles virtual sizer. My perfect size is ${detectedSize}! Let's go visit their boutique together soon: 📍 ${storeMapsUrl}`;
+                const encodedPayload = encodeURIComponent(baseShareMessage);
+                const whatsappDeepLink = `https://api.whatsapp.com/send?text=${encodedPayload}`;
+                
+                window.open(whatsappDeepLink, '_blank');
+            };
+        }
+    }
+
+    function selectBangleSize(sizeStr) {
+      const recommendation = BANGLE_SIZES.find(sz => sz.size === sizeStr) || BANGLE_SIZES[2];
+      
+      document.getElementById('result-size-label').textContent = recommendation.size;
+      const estimatedWidth = recommendation.diameterMM + 2.0;
+      document.getElementById('result-width-mm').textContent = `${(estimatedWidth / 10).toFixed(2)} cm`;
+      document.getElementById('result-diameter-mm').textContent = `${(recommendation.diameterMM / 10).toFixed(2)} cm`;
+      
+      const rulerMarker = document.getElementById('result-ruler-marker');
+      if (rulerMarker) {
+        rulerMarker.style.left = `${recommendation.positionPct}%`;
+      }
+      
+      BANGLE_SIZES.forEach(sz => {
+        const el = document.getElementById(`tick-${sz.size.replace('.', '-')}`);
+        if (el) {
+          if (sz.size === recommendation.size) {
+            el.classList.add('highlighted');
+          } else {
+            el.classList.remove('highlighted');
+          }
+        }
+      });
+
+      const scale = recommendation.diameterMM / 60.3;
+      const svgGraphic = document.querySelector('.bangle-svg-graphic');
+      if (svgGraphic) {
+        svgGraphic.style.transform = `rotate(-90deg) scale(${scale})`;
+      }
+    }
+    function drawHandStencil(ctx, w, h) {
+      ctx.save();
+      ctx.strokeStyle = "rgba(212, 175, 55, 0.4)";
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([8, 6]);
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = "rgba(212, 175, 55, 0.15)";
+      
+      const centerX = w / 2;
+      const centerY = h / 2 + h * 0.03;
+      const scale = Math.min(w, h) * 0.36;
+      
+      ctx.beginPath();
+      // Draw wrist left side
+      ctx.moveTo(centerX - scale * 0.22, centerY + scale * 0.5);
+      ctx.lineTo(centerX - scale * 0.22, centerY + scale * 0.3);
+      
+      // Thumb contour
+      ctx.quadraticCurveTo(centerX - scale * 0.42, centerY + scale * 0.18, centerX - scale * 0.38, centerY - scale * 0.05);
+      ctx.quadraticCurveTo(centerX - scale * 0.28, centerY - scale * 0.13, centerX - scale * 0.22, centerY + scale * 0.05);
+      
+      // Index finger
+      ctx.lineTo(centerX - scale * 0.22, centerY - scale * 0.32);
+      ctx.quadraticCurveTo(centerX - scale * 0.13, centerY - scale * 0.37, centerX - scale * 0.10, centerY - scale * 0.32);
+      ctx.lineTo(centerX - scale * 0.10, centerY + scale * 0.05);
+      
+      // Middle finger
+      ctx.lineTo(centerX - scale * 0.10, centerY - scale * 0.39);
+      ctx.quadraticCurveTo(centerX, centerY - scale * 0.44, centerX + scale * 0.05, centerY - scale * 0.39);
+      ctx.lineTo(centerX + scale * 0.05, centerY + scale * 0.05);
+      
+      // Ring finger
+      ctx.lineTo(centerX + scale * 0.05, centerY - scale * 0.35);
+      ctx.quadraticCurveTo(centerX + scale * 0.14, centerY - scale * 0.40, centerX + scale * 0.17, centerY - scale * 0.35);
+      ctx.lineTo(centerX + scale * 0.17, centerY + scale * 0.08);
+      
+      // Pinky finger
+      ctx.lineTo(centerX + scale * 0.17, centerY - scale * 0.23);
+      ctx.quadraticCurveTo(centerX + scale * 0.25, centerY - scale * 0.28, centerX + scale * 0.27, centerY - scale * 0.23);
+      ctx.quadraticCurveTo(centerX + scale * 0.30, centerY + scale * 0.15, centerX + scale * 0.22, centerY + scale * 0.3);
+      
+      // Wrist right side
+      ctx.lineTo(centerX + scale * 0.22, centerY + scale * 0.5);
+      ctx.stroke();
+ 
+      // Knuckle line
+      ctx.beginPath();
+      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = "rgba(212, 175, 55, 0.25)";
+      ctx.moveTo(centerX - scale * 0.18, centerY);
+      ctx.lineTo(centerX + scale * 0.18, centerY);
+      ctx.stroke();
+      
+      ctx.fillStyle = "rgba(212, 175, 55, 0.55)";
+      ctx.beginPath();
+      ctx.arc(centerX - scale * 0.18, centerY, 5, 0, 2 * Math.PI);
+      ctx.arc(centerX + scale * 0.18, centerY, 5, 0, 2 * Math.PI);
+      ctx.fill();
+ 
+      ctx.fillStyle = "rgba(212, 175, 55, 0.65)";
+      ctx.font = "700 11px 'Montserrat', sans-serif";
+      ctx.textAlign = "center";
+      ctx.setLineDash([]);
+      ctx.fillText("ALIGN KNUCKLES HERE", centerX, centerY + scale * 0.62);
+      
+      ctx.restore();
+    }
+
+    // ------------------------------------------------------------------------
+    
