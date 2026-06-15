@@ -13,7 +13,21 @@
   
   <!-- MediaPipe Hands CDN Dependency -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-  <script src="js/app.js" defer></script>
+  <script src="js/utils/debug.js" defer></script>
+  <script src="js/utils/constants.js" defer></script>
+  <script src="js/utils/filters.js" defer></script>
+  <script src="js/utils/math.js" defer></script>
+  <script src="js/core/state.js" defer></script>
+  <script src="js/core/init.js" defer></script>
+  <script src="js/core/ar-engine.js" defer></script>
+  <script src="js/core/simulation.js" defer></script>
+  <script src="js/ui/carousel.js" defer></script>
+  <script src="js/core/webgl.js" defer></script>
+  <script src="js/core/xr-tick.js" defer></script>
+  <script src="js/core/hand-tracking.js" defer></script>
+  <script src="js/core/tracking-engine.js" defer></script>
+  <script src="js/ui/graphics.js" defer></script>
+  <script src="js/core/testbed.js" defer></script>
 
   <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -246,6 +260,25 @@
       </div>
 
       <!-- Action buttons -->
+      <div class="luxury-marketing-funnel" style="margin: 24px 0; width: 100%;">
+      <div class="btn-split-premium-wrapper" style="display: flex; align-items: center; background: #d4af37; border-radius: 24px; box-shadow: 0 4px 20px rgba(212, 175, 55, 0.25); overflow: hidden; width: 100%; transition: transform 0.2s ease;">
+        
+        <a id="btn-maps-navigation" 
+           href="https://maps.app.goo.gl/o3iS41VXG6iFXY6s9" 
+           target="_blank" 
+           class="btn-premium-gold-split" 
+           style="flex: 1.1; text-align: center; text-decoration: none; color: #fff; padding: 14px 8px; font-weight: bold; font-size: 14px; letter-spacing: 0.3px; border-right: 1px solid rgba(255, 255, 255, 0.35); transition: background 0.2s ease;">
+           📍 Find My Size
+        </a>
+
+        <button id="btn-share-bangle-size" 
+                class="btn-premium-gold-split" 
+                style="flex: 0.9; background: transparent; border: none; text-align: center; color: #fff; padding: 14px 8px; font-weight: bold; font-size: 14px; letter-spacing: 0.3px; cursor: pointer; transition: background 0.2s ease;">
+                💬 Send Hint
+        </button>
+        
+      </div>
+    </div>
       <button id="btn-recalibrate" class="btn">Measure Again</button>
       <button id="btn-close-results" class="btn btn-secondary">Close View</button>
     </div>

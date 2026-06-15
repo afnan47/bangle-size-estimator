@@ -956,6 +956,33 @@
       }
     }
 
+    // --- PASTE THIS NEW STANDALONE FUNCTION AT THE BOTTOM OF YOUR FILE ---
+
+    function updateStoreFunnels(detectedSize) {
+        const mapsBtn = document.getElementById('btn-maps-navigation');
+        const shareBtn = document.getElementById('btn-share-bangle-size');
+        const storeMapsUrl = "https://maps.app.goo.gl/o3iS41VXG6iFXY6s9"; 
+
+        // 1. Synchronize the Left Segment (Maps Route)
+        if (mapsBtn) {
+            mapsBtn.innerText = `📍 Find Size ${detectedSize}`;
+            mapsBtn.href = storeMapsUrl;
+        }
+
+        // 2. Build the WhatsApp Window Redirect for the Right Segment
+        if (shareBtn) {
+            shareBtn.onclick = (e) => {
+                e.preventDefault();
+                
+                const baseShareMessage = `Hey! I just scanned my hand using the Saubhagya Bangles virtual sizer. My perfect size is ${detectedSize}! Let's go visit their boutique together soon: 📍 ${storeMapsUrl}`;
+                const encodedPayload = encodeURIComponent(baseShareMessage);
+                const whatsappDeepLink = `https://api.whatsapp.com/send?text=${encodedPayload}`;
+                
+                window.open(whatsappDeepLink, '_blank');
+            };
+        }
+    }
+
     function selectBangleSize(sizeStr) {
       const recommendation = BANGLE_SIZES.find(sz => sz.size === sizeStr) || BANGLE_SIZES[2];
       
@@ -1621,6 +1648,11 @@
         
         resultModal.classList.remove('hidden');
       }, 500);
+      if (typeof updateStoreFunnels === 'function') {
+        // Pass the final calibrated size string (e.g., "2.6") to the button handler
+        updateStoreFunnels(identifiedSize || "2.6"); 
+      }
+      
     }
 
     function getRecommendedBangleSize(measuredWidthMM) {
