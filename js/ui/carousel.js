@@ -22,7 +22,7 @@
 
         // 1. Synchronize the Left Segment (Maps Route)
         if (mapsBtn) {
-            mapsBtn.innerText = `📍 Find Size ${detectedSize}`;
+            mapsBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="btn-icon"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> Find Size ${detectedSize}`;
             mapsBtn.href = storeMapsUrl;
         }
 
@@ -80,22 +80,6 @@
       document.getElementById('result-width-mm').textContent = `${(estimatedWidth / 10).toFixed(2)} cm`;
       document.getElementById('result-diameter-mm').textContent = `${(recommendation.diameterMM / 10).toFixed(2)} cm`;
       
-      const rulerMarker = document.getElementById('result-ruler-marker');
-      if (rulerMarker) {
-        rulerMarker.style.left = `${recommendation.positionPct}%`;
-      }
-      
-      BANGLE_SIZES.forEach(sz => {
-        const el = document.getElementById(`tick-${sz.size.replace('.', '-')}`);
-        if (el) {
-          if (sz.size === recommendation.size) {
-            el.classList.add('highlighted');
-          } else {
-            el.classList.remove('highlighted');
-          }
-        }
-      });
-
       const scale = recommendation.diameterMM / 60.3;
       const svgGraphic = document.querySelector('.bangle-svg-graphic');
       if (svgGraphic) {

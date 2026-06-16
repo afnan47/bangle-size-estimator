@@ -201,19 +201,6 @@
         </div>
       </div>
 
-      <!-- Size Ruler Scale -->
-      <div class="ruler-container">
-        <div class="ruler-label">Sizing Spectrum</div>
-        <div class="ruler-line">
-          <div id="tick-2-2" class="ruler-tick">2.2</div>
-          <div id="tick-2-4" class="ruler-tick">2.4</div>
-          <div id="tick-2-6" class="ruler-tick">2.6</div>
-          <div id="tick-2-8" class="ruler-tick">2.8</div>
-          <div id="tick-2-10" class="ruler-tick">2.10</div>
-          <!-- Sliding marker showing the user's fit position -->
-          <div id="result-ruler-marker" class="ruler-marker" style="left: 50%;"></div>
-        </div>
-      </div>
 
       <!-- Feedback panel -->
       <div id="feedback-panel" class="feedback-panel">
@@ -250,26 +237,26 @@
 
       <!-- Action buttons -->
       <div class="luxury-marketing-funnel" style="margin: 24px 0; width: 100%;">
-      <div class="btn-split-premium-wrapper" style="display: flex; align-items: center; background: #d4af37; border-radius: 24px; box-shadow: 0 4px 20px rgba(212, 175, 55, 0.25); overflow: hidden; width: 100%; transition: transform 0.2s ease;">
-        
-        <a id="btn-maps-navigation" 
-           href="https://maps.app.goo.gl/o3iS41VXG6iFXY6s9" 
-           target="_blank" 
-           class="btn-premium-gold-split" 
-           style="flex: 1.1; text-align: center; text-decoration: none; color: #fff; padding: 14px 8px; font-weight: bold; font-size: 14px; letter-spacing: 0.3px; border-right: 1px solid rgba(255, 255, 255, 0.35); transition: background 0.2s ease;">
-           📍 Find My Size
-        </a>
+        <div class="btn-split-premium-wrapper">
+          
+          <a id="btn-maps-navigation" 
+             href="https://maps.app.goo.gl/o3iS41VXG6iFXY6s9" 
+             target="_blank" 
+             class="btn-premium-gold-split">
+             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="btn-icon"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+             Find My Size
+          </a>
 
-        <button id="btn-share-bangle-size" 
-                class="btn-premium-gold-split" 
-                style="flex: 0.9; background: transparent; border: none; text-align: center; color: #fff; padding: 14px 8px; font-weight: bold; font-size: 14px; letter-spacing: 0.3px; cursor: pointer; transition: background 0.2s ease;">
-                💬 Send Hint
-        </button>
-        
+          <button id="btn-share-bangle-size" 
+                  class="btn-premium-gold-split">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="btn-icon"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                  Send Hint
+          </button>
+          
+        </div>
       </div>
-    </div>
       <button id="btn-recalibrate" class="btn">Measure Again</button>
-      <button id="btn-close-results" class="btn btn-secondary">Close View</button>
+      <button id="btn-close-results" class="btn btn-secondary">Close</button>
     </div>
   </section>
 

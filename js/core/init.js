@@ -29,11 +29,6 @@
         checkReturningUser();
       });
 
-      // 4. Interactive preview ruler ticks mapping
-      BANGLE_SIZES.forEach(sz => {
-        document.getElementById(`tick-${sz.size.replace('.', '-')}`)
-          ?.addEventListener('click', () => selectBangleSize(sz.size));
-      });
 
       // 5. Customer Feedback Panels UI loops
       document.getElementById('btn-feedback-yes')?.addEventListener('click', () => {

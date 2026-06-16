@@ -338,3 +338,60 @@
   box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15);
 }
 
+/* Premium Dual-Action Split Button styling */
+.btn-split-premium-wrapper {
+  display: flex;
+  align-items: center;
+  background: var(--accent-grad);
+  border-radius: 28px;
+  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.25);
+  overflow: hidden;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.2s ease;
+}
+
+.btn-split-premium-wrapper:hover {
+  box-shadow: 0 12px 32px rgba(212, 175, 55, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-split-premium-wrapper:active {
+  transform: scale(0.985);
+}
+
+.btn-premium-gold-split {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  color: #0c0205 !important;
+  padding: 16px 12px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.25s ease;
+}
+
+.btn-premium-gold-split:first-child {
+  border-right: 1px solid rgba(12, 2, 5, 0.15);
+}
+
+.btn-premium-gold-split:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.btn-premium-gold-split .btn-icon {
+  width: 16px;
+  height: 16px;
+  stroke: #0c0205;
+}
+
+
