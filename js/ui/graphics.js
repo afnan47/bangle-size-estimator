@@ -106,7 +106,7 @@
       }
     }
 
-    // Zero-latency 3D circle projected overlay
+    // Zero-latency 3D circle projected overlay with premium Kada styling
     function drawProjectedBangleOverlay(p5_3d, p17_3d, measuredWidthMM, wrist_3d = null) {
       if (!activeProjectionMatrix) return;
 
@@ -120,12 +120,11 @@
       const center = [cx, cy, cz];
 
       // 2. Set the recommended bangle radius in meters
-      // Sizing is based on hand width minus compression factor
       const recSize = getRecommendedBangleSize(measuredWidthMM);
       const diameterMeters = recSize.diameterMM / 1000;
       const radiusMeters = diameterMeters / 2;
 
-      // 3. Generate basis vectors for palm plane alignment if upgraded mode is active
+      // 3. Generate basis vectors for palm plane alignment
       let uDir = [1, 0, 0];
       let wDir = [0, 1, 0];
       let isCoplanarAligned = false;
@@ -137,7 +136,6 @@
         const unitNormal = normalizeVector(normalVec);
 
         if (magnitude(unitNormal) > 0.1) {
-          // Amplify X and Y deviation from camera axis by 2.0x for subconscious leveling
           const ampX = unitNormal[0] * 2.0;
           const ampY = unitNormal[1] * 2.0;
           const ampZ = unitNormal[2];
@@ -149,75 +147,185 @@
         }
       }
 
-      // 4. Generate points on the circle in view space (either flat or coplanar aligned)
-      const numPoints = 40;
-      const circlePoints = [];
-      for (let i = 0; i <= numPoints; i++) {
-        const theta = (i * 2 * Math.PI) / numPoints;
-        const cosT = Math.cos(theta);
-        const sinT = Math.sin(theta);
-        
-        let p_view;
-        if (isCoplanarAligned) {
-          // Circle points embedded in 3D hand plane
-          p_view = [
-            cx + radiusMeters * (cosT * uDir[0] + sinT * wDir[0]),
-            cy + radiusMeters * (cosT * uDir[1] + sinT * wDir[1]),
-            cz + radiusMeters * (cosT * uDir[2] + sinT * wDir[2])
-          ];
-        } else {
-          // Fallback: parallel to camera sensor
-          p_view = [
-            cx + radiusMeters * cosT,
-            cy + radiusMeters * sinT,
-            cz
-          ];
+      // Helper to generate points
+      function getProjectedPoints(r, angleOffset = 0, numPoints = 60) {
+        const points = [];
+        for (let i = 0; i <= numPoints; i++) {
+          const theta = ((i * 2 * Math.PI) / numPoints) + angleOffset;
+          const cosT = Math.cos(theta);
+          const sinT = Math.sin(theta);
+          
+          let p_view;
+          if (isCoplanarAligned) {
+            p_view = [
+              cx + r * (cosT * uDir[0] + sinT * wDir[0]),
+              cy + r * (cosT * uDir[1] + sinT * wDir[1]),
+              cz + r * (cosT * uDir[2] + sinT * wDir[2])
+            ];
+          } else {
+            p_view = [
+              cx + r * cosT,
+              cy + r * sinT,
+              cz
+            ];
+          }
+          const [u, v] = project3DTo2D(p_view, activeProjectionMatrix, w, h);
+          points.push([u, v]);
         }
-        
-        // Project to 2D screen coordinates
-        const [u, v] = project3DTo2D(p_view, activeProjectionMatrix, w, h);
-        circlePoints.push([u, v]);
+        return points;
       }
 
-      // 5. Draw the 3D projected circle on canvas
-      overlayCtx.beginPath();
-      overlayCtx.moveTo(circlePoints[0][0], circlePoints[0][1]);
-      for (let i = 1; i < circlePoints.length; i++) {
-        overlayCtx.lineTo(circlePoints[i][0], circlePoints[i][1]);
-      }
-      overlayCtx.closePath();
-
+      const spinAngle = (Date.now() / 2000) % (2 * Math.PI);
       const [centerU, centerV] = project3DTo2D(center, activeProjectionMatrix, w, h);
-      
-      // Calculate radius in pixels for correct gradient scaling
-      let radiusPixels = 50;
-      if (circlePoints.length > 0) {
-        const dx = circlePoints[0][0] - centerU;
-        const dy = circlePoints[0][1] - centerV;
-        radiusPixels = Math.sqrt(dx * dx + dy * dy);
+
+      // Render based on selected style
+      const activeStyle = typeof selectedBangleStyle !== 'undefined' ? selectedBangleStyle : 'gold-filigree';
+
+      if (activeStyle === 'gold-filigree') {
+        // Double-ring Filigree with gold beads
+        const outerPoints = getProjectedPoints(radiusMeters + 0.0015);
+        const innerPoints = getProjectedPoints(radiusMeters - 0.0015);
+        const beadPoints = getProjectedPoints(radiusMeters, spinAngle, 36);
+
+        // Draw outer ring
+        overlayCtx.beginPath();
+        overlayCtx.moveTo(outerPoints[0][0], outerPoints[0][1]);
+        for (let i = 1; i < outerPoints.length; i++) {
+          overlayCtx.lineTo(outerPoints[i][0], outerPoints[i][1]);
+        }
+        overlayCtx.closePath();
+        overlayCtx.strokeStyle = getGoldGradient(centerU, centerV, outerPoints[0][0], outerPoints[0][1]);
+        overlayCtx.lineWidth = 2.5;
+        overlayCtx.shadowBlur = 6;
+        overlayCtx.shadowColor = "rgba(212, 175, 55, 0.3)";
+        overlayCtx.stroke();
+        overlayCtx.shadowBlur = 0;
+
+        // Draw inner ring
+        overlayCtx.beginPath();
+        overlayCtx.moveTo(innerPoints[0][0], innerPoints[0][1]);
+        for (let i = 1; i < innerPoints.length; i++) {
+          overlayCtx.lineTo(innerPoints[i][0], innerPoints[i][1]);
+        }
+        overlayCtx.closePath();
+        overlayCtx.strokeStyle = getGoldGradient(centerU, centerV, innerPoints[0][0], innerPoints[0][1]);
+        overlayCtx.lineWidth = 1.8;
+        overlayCtx.stroke();
+
+        // Draw gold beads inside the rings
+        beadPoints.forEach(([u, v]) => {
+          overlayCtx.beginPath();
+          overlayCtx.arc(u, v, 3.5, 0, 2 * Math.PI);
+          overlayCtx.fillStyle = getGoldGradient(u, v, u + 2, v + 2);
+          overlayCtx.fill();
+          overlayCtx.strokeStyle = "rgba(23, 4, 10, 0.4)";
+          overlayCtx.lineWidth = 0.5;
+          overlayCtx.stroke();
+        });
+
+      } else if (activeStyle === 'kundan-kada') {
+        // Thick Kundan band with glowing rubies and emeralds
+        const bandPoints = getProjectedPoints(radiusMeters);
+        
+        // Draw base band
+        overlayCtx.beginPath();
+        overlayCtx.moveTo(bandPoints[0][0], bandPoints[0][1]);
+        for (let i = 1; i < bandPoints.length; i++) {
+          overlayCtx.lineTo(bandPoints[i][0], bandPoints[i][1]);
+        }
+        overlayCtx.closePath();
+        overlayCtx.strokeStyle = getGoldGradient(centerU, centerV, bandPoints[0][0], bandPoints[0][1]);
+        overlayCtx.lineWidth = 7.5;
+        overlayCtx.shadowBlur = 10;
+        overlayCtx.shadowColor = "rgba(212, 175, 55, 0.4)";
+        overlayCtx.stroke();
+        overlayCtx.shadowBlur = 0;
+
+        // Draw gems (alternating rubies and emeralds)
+        const numGems = 12;
+        const gemPoints = getProjectedPoints(radiusMeters, spinAngle, numGems);
+        gemPoints.forEach(([u, v], index) => {
+          // Gem base border
+          overlayCtx.beginPath();
+          overlayCtx.arc(u, v, 4.5, 0, 2 * Math.PI);
+          overlayCtx.fillStyle = "rgba(212, 175, 55, 0.95)";
+          overlayCtx.fill();
+
+          // Gem center stone
+          overlayCtx.beginPath();
+          overlayCtx.arc(u, v, 2.5, 0, 2 * Math.PI);
+          const isRuby = index % 2 === 0;
+          overlayCtx.fillStyle = isRuby ? "#e63946" : "#2a9d8f"; // Ruby red or Emerald green
+          overlayCtx.fill();
+          
+          // Sparkle dot
+          overlayCtx.beginPath();
+          overlayCtx.arc(u - 1, v - 1, 0.8, 0, 2 * Math.PI);
+          overlayCtx.fillStyle = "#ffffff";
+          overlayCtx.fill();
+        });
+
+      } else if (activeStyle === 'polki-kada') {
+        // Antique gold band with sparkling uncut diamonds
+        const basePoints = getProjectedPoints(radiusMeters);
+        
+        // Base band
+        overlayCtx.beginPath();
+        overlayCtx.moveTo(basePoints[0][0], basePoints[0][1]);
+        for (let i = 1; i < basePoints.length; i++) {
+          overlayCtx.lineTo(basePoints[i][0], basePoints[i][1]);
+        }
+        overlayCtx.closePath();
+        overlayCtx.strokeStyle = getGoldGradient(centerU, centerV, basePoints[0][0], basePoints[0][1], true);
+        overlayCtx.lineWidth = 6;
+        overlayCtx.stroke();
+
+        // Draw Polki stones (octagon cut diamonds)
+        const numStones = 8;
+        const stonePoints = getProjectedPoints(radiusMeters, spinAngle, numStones);
+        stonePoints.forEach(([u, v]) => {
+          overlayCtx.beginPath();
+          // Uncut diamond shape (octagon)
+          for (let step = 0; step < 8; step++) {
+            const angle = (step * Math.PI) / 4;
+            const px = u + 4.5 * Math.cos(angle);
+            const py = v + 4.5 * Math.sin(angle);
+            if (step === 0) overlayCtx.moveTo(px, py);
+            else overlayCtx.lineTo(px, py);
+          }
+          overlayCtx.closePath();
+          
+          // Diamond radial reflection gradient
+          const gemGrad = overlayCtx.createRadialGradient(u - 1, v - 1, 0.5, u, v, 4.5);
+          gemGrad.addColorStop(0, "#ffffff");
+          gemGrad.addColorStop(0.3, "#e9ecef");
+          gemGrad.addColorStop(0.7, "#ced4da");
+          gemGrad.addColorStop(1, "#adb5bd");
+          overlayCtx.fillStyle = gemGrad;
+          overlayCtx.fill();
+
+          overlayCtx.strokeStyle = "rgba(212, 175, 55, 0.85)";
+          overlayCtx.lineWidth = 1;
+          overlayCtx.stroke();
+        });
       }
 
-      // Shimmering effect over time using Date.now() for smooth linear gradient animation
-      const shimmer = (Date.now() / 2000) % 1.0;
-      const grad = overlayCtx.createLinearGradient(
-        centerU - radiusPixels * 1.5, 
-        centerV - radiusPixels * 1.5, 
-        centerU + radiusPixels * 1.5, 
-        centerV + radiusPixels * 1.5
-      );
-      
-      grad.addColorStop(0, '#8a640f');
-      grad.addColorStop((shimmer + 0.2) % 1.0, '#f5e2b3');
-      grad.addColorStop((shimmer + 0.5) % 1.0, '#d4af37');
-      grad.addColorStop((shimmer + 0.8) % 1.0, '#f5e2b3');
-      grad.addColorStop(1, '#8a640f');
-
-      overlayCtx.strokeStyle = grad;
-      overlayCtx.lineWidth = 5;
-      overlayCtx.shadowBlur = 12;
-      overlayCtx.shadowColor = "rgba(212, 175, 55, 0.4)";
-      overlayCtx.stroke();
-      overlayCtx.shadowBlur = 0; // Reset
+      // Helper to construct gold gradient dynamically
+      function getGoldGradient(cx, cy, tx, ty, isAntique = false) {
+        const grad = overlayCtx.createLinearGradient(cx - 50, cy - 50, cx + 50, cy + 50);
+        if (isAntique) {
+          grad.addColorStop(0, '#705313');
+          grad.addColorStop(0.5, '#c5a880');
+          grad.addColorStop(1, '#503b0c');
+        } else {
+          grad.addColorStop(0, '#8a640f');
+          grad.addColorStop(0.35, '#f5e2b3');
+          grad.addColorStop(0.5, '#d4af37');
+          grad.addColorStop(0.65, '#f5e2b3');
+          grad.addColorStop(1, '#8a640f');
+        }
+        return grad;
+      }
 
       // Draw sizing tag near the bangle circle center
       overlayCtx.font = "700 12px 'Montserrat', sans-serif";

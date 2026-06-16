@@ -8,6 +8,7 @@
       // 2. Clean, declarative binding map for simple click triggers
       const standardClickBindings = [
         { id: 'btn-direct-scan', action: startAR },
+        { id: 'btn-quick-start-scan', action: startAR },
         { id: 'btn-exit-ar',     action: stopAR },
         { id: 'btn-recalibrate', action: recalibrate }
       ];
@@ -67,6 +68,22 @@
           document.querySelector('.feedback-question')?.classList.add('hidden');
         });
       });
+      // 5.5 Bangle Catalog style selector click listeners
+      document.querySelectorAll('.catalog-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          const clickedItem = e.currentTarget;
+          document.querySelectorAll('.catalog-item').forEach(c => c.classList.remove('active'));
+          clickedItem.classList.add('active');
+          
+          const style = clickedItem.getAttribute('data-style');
+          selectedBangleStyle = style;
+          
+          // Re-draw static overlay immediately to reflect the design change on canvas
+          if (typeof drawBangleStaticOverlay === 'function') {
+            drawBangleStaticOverlay();
+          }
+        });
+      });
       
       // 6. Graphics & simulation setups
       overlayCanvas = document.getElementById('overlay-canvas');
@@ -110,27 +127,82 @@
       screenOnboarding.classList.add('hidden');
     }
 
-    function updateHUD(status, liveWidthText, progressPct, instruction, isWarning = false) {
+    function updateHUD(status, liveWidthText, progressPct, instruction, isWarning = false, pitchVal = null, depthVal = null) {
       const badge = document.getElementById('badge-status');
-      badge.textContent = status;
-      badge.className = "status-badge " + status.toLowerCase().replace("...", "");
+      if (badge) {
+        badge.textContent = status;
+        badge.className = "status-badge " + status.toLowerCase().replace("...", "").trim();
+      }
 
-      document.getElementById('live-width').textContent = liveWidthText;
+      const lw = document.getElementById('live-width');
+      if (lw) lw.textContent = liveWidthText;
       
       const pBar = document.getElementById('calibration-progress');
-      pBar.style.width = `${progressPct}%`;
-      if (progressPct >= 100) {
-        pBar.style.background = "var(--state-success)";
-      } else {
-        pBar.style.background = "var(--accent-grad)";
+      if (pBar) {
+        pBar.style.width = `${progressPct}%`;
+        if (progressPct >= 100) {
+          pBar.style.background = "var(--state-success)";
+        } else {
+          pBar.style.background = "var(--accent-grad)";
+        }
       }
 
       const instEl = document.getElementById('hud-status-instruction');
-      instEl.textContent = instruction;
-      if (isWarning) {
-        instEl.classList.add('warning-active');
-      } else {
-        instEl.classList.remove('warning-active');
+      if (instEl) {
+        instEl.textContent = instruction;
+        if (isWarning) {
+          instEl.classList.add('warning-active');
+        } else {
+          instEl.classList.remove('warning-active');
+        }
+      }
+
+      // 1. Dynamic glowing card classes based on status
+      const hudCard = document.querySelector('.hud-card');
+      if (hudCard) {
+        hudCard.classList.remove('searching-active', 'calibrating-active', 'unstable-active', 'success-active');
+        const statusClean = status.toLowerCase().replace("...", "").trim();
+        if (statusClean === 'searching') {
+          hudCard.classList.add('searching-active');
+        } else if (statusClean === 'calibrating') {
+          hudCard.classList.add('calibrating-active');
+        } else if (statusClean === 'unstable') {
+          hudCard.classList.add('unstable-active');
+        } else if (statusClean === 'success') {
+          hudCard.classList.add('success-active');
+        }
+      }
+
+      // 2. Update tilt & distance gauges
+      const tiltEl = document.getElementById('hud-tilt-gauge');
+      if (tiltEl) {
+        if (pitchVal !== null && pitchVal !== undefined) {
+          tiltEl.textContent = `Tilt: ${Math.round(pitchVal)}° / 15° Max`;
+          if (pitchVal > 15) {
+            tiltEl.style.color = 'var(--state-warning)';
+          } else {
+            tiltEl.style.color = 'var(--accent-gold)';
+          }
+        } else {
+          tiltEl.textContent = 'Tilt: --°';
+          tiltEl.style.color = 'var(--text-secondary)';
+        }
+      }
+
+      const distEl = document.getElementById('hud-distance-gauge');
+      if (distEl) {
+        if (depthVal !== null && depthVal !== undefined) {
+          const depthCm = Math.round(depthVal * 100);
+          distEl.textContent = `Distance: ${depthCm} cm`;
+          if (depthVal < 0.15 || depthVal > 1.0) {
+            distEl.style.color = 'var(--state-warning)';
+          } else {
+            distEl.style.color = 'var(--text-secondary)';
+          }
+        } else {
+          distEl.textContent = 'Distance: -- cm';
+          distEl.style.color = 'var(--text-secondary)';
+        }
       }
     }
 

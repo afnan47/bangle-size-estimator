@@ -394,4 +394,16 @@
   stroke: #0c0205;
 }
 
+/* Catalog Item Styles */
+.catalog-item.active {
+  border-color: var(--accent-gold) !important;
+  background: rgba(212, 175, 55, 0.08) !important;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.15);
+  transform: translateY(-2px);
+}
+.catalog-item:hover:not(.active) {
+  border-color: rgba(212, 175, 55, 0.45) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
 

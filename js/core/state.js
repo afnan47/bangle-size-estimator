@@ -37,6 +37,7 @@
     const filterP17 = new OneEuroFilter3D(30, 1.0, 0.0005, 1.0);
     let isUpgradedSizerMode = true; // Enabled by default, can be toggled by the testbed simulation
     let isSimulationTestbedRunning = false;
+    let selectedBangleStyle = 'gold-filigree'; // Options: 'gold-filigree', 'kundan-kada', 'polki-kada'
 
     // WebGL2 Async Pixel Buffer Objects (PBOs) pack buffers
     let pboBuffers = [null, null];

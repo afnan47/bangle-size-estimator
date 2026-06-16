@@ -198,3 +198,24 @@
   line-height: 1.4;
 }
 
+/* Status Card Glows */
+.hud-card.searching-active {
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.1), 0 16px 40px rgba(0, 0, 0, 0.6);
+  border-color: rgba(212, 175, 55, 0.2);
+}
+
+.hud-card.calibrating-active {
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.35), 0 16px 40px rgba(0, 0, 0, 0.6);
+  border-color: rgba(212, 175, 55, 0.55);
+}
+
+.hud-card.unstable-active {
+  box-shadow: 0 0 25px rgba(224, 168, 153, 0.45), 0 16px 40px rgba(0, 0, 0, 0.6);
+  border-color: rgba(224, 168, 153, 0.55);
+}
+
+.hud-card.success-active {
+  box-shadow: 0 0 25px rgba(197, 168, 128, 0.45), 0 16px 40px rgba(0, 0, 0, 0.6);
+  border-color: rgba(197, 168, 128, 0.55);
+}
+

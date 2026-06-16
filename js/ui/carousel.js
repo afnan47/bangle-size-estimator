@@ -1,16 +1,162 @@
-// RETURNING USER NAVIGATION GATE
+// RETURNING USER NAVIGATION GATE & DYNAMIC ONBOARDING CAROUSEL
     // ------------------------------------------------------------------------
-    function checkReturningUser() {
-      // The returning user card is removed. We always show the instructions card.
-      const carouselCard = document.getElementById('instructions-carousel-card');
-      if (carouselCard) {
-        carouselCard.classList.remove('hidden');
-        carouselCard.style.display = 'flex';
+    function checkBrowserDeviceSupport() {
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isAndroid = /Android/i.test(navigator.userAgent);
+      
+      const instructionsCard = document.getElementById('instructions-carousel-card');
+      const handoffCard = document.getElementById('desktop-handoff-card');
+      const qrImg = document.getElementById('handoff-qr-image');
+
+      if (qrImg) {
+        // Automatically inject current origin/path as target for mobile sizer
+        const currentUrl = window.location.origin + window.location.pathname;
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(currentUrl)}`;
+      }
+
+      const quickStartBtn = document.getElementById('btn-quick-start-scan');
+
+      if (isAndroid || (isMobile && window.location.search.includes('bypass=true')) || isLocalTest()) {
+        if (instructionsCard) {
+          instructionsCard.classList.remove('hidden');
+          instructionsCard.style.display = 'flex';
+        }
+        if (quickStartBtn) {
+          quickStartBtn.classList.remove('hidden');
+          quickStartBtn.style.display = 'block';
+        }
+        if (handoffCard) {
+          handoffCard.classList.add('hidden');
+          handoffCard.style.display = 'none';
+        }
+      } else {
+        if (handoffCard) {
+          handoffCard.classList.remove('hidden');
+          handoffCard.style.display = 'flex';
+        }
+        if (instructionsCard) {
+          instructionsCard.classList.add('hidden');
+          instructionsCard.style.display = 'none';
+        }
+        if (quickStartBtn) {
+          quickStartBtn.classList.add('hidden');
+          quickStartBtn.style.display = 'none';
+        }
       }
     }
 
+    function checkReturningUser() {
+      checkBrowserDeviceSupport();
+    }
+
+    let carouselIndex = 0;
+    const totalCarouselSlides = 3;
+
     function initCarousel() {
-      // Carousel is disabled; all instructions are shown at once.
+      const track = document.getElementById('carousel-track');
+      const dots = document.querySelectorAll('.carousel-dot');
+      const btnPrev = document.getElementById('btn-carousel-prev');
+      const btnNext = document.getElementById('btn-carousel-next');
+      const btnScan = document.getElementById('btn-direct-scan');
+
+      if (!track) return;
+
+      function updateCarousel() {
+        const slideWidthPct = 100 / totalCarouselSlides;
+        track.style.transform = `translateX(-${carouselIndex * slideWidthPct}%)`;
+
+        // Update dots active class
+        dots.forEach((dot, idx) => {
+          if (idx === carouselIndex) {
+            dot.classList.add('active');
+          } else {
+            dot.classList.remove('active');
+          }
+        });
+
+        // Hide/Show next/prev/scan controls dynamically
+        if (carouselIndex === 0) {
+          if (btnPrev) btnPrev.style.display = 'none';
+          if (btnNext) {
+            btnNext.style.display = 'block';
+            btnNext.style.width = '100%';
+            btnNext.textContent = 'Next';
+          }
+          if (btnScan) btnScan.style.display = 'none';
+        } else if (carouselIndex === totalCarouselSlides - 1) {
+          if (btnPrev) {
+            btnPrev.style.display = 'block';
+            btnPrev.style.width = '35%';
+          }
+          if (btnNext) btnNext.style.display = 'none';
+          if (btnScan) {
+            btnScan.style.display = 'flex';
+            btnScan.style.width = '65%';
+          }
+        } else {
+          if (btnPrev) {
+            btnPrev.style.display = 'block';
+            btnPrev.style.width = '35%';
+          }
+          if (btnNext) {
+            btnNext.style.display = 'block';
+            btnNext.style.width = '65%';
+            btnNext.textContent = 'Next';
+          }
+          if (btnScan) btnScan.style.display = 'none';
+        }
+      }
+
+      if (btnNext) {
+        btnNext.onclick = (e) => {
+          e.preventDefault();
+          if (carouselIndex < totalCarouselSlides - 1) {
+            carouselIndex++;
+            updateCarousel();
+          }
+        };
+      }
+
+      if (btnPrev) {
+        btnPrev.onclick = (e) => {
+          e.preventDefault();
+          if (carouselIndex > 0) {
+            carouselIndex--;
+            updateCarousel();
+          }
+        };
+      }
+
+      dots.forEach((dot) => {
+        dot.onclick = (e) => {
+          const targetIdx = parseInt(e.target.getAttribute('data-index') || '0');
+          carouselIndex = targetIdx;
+          updateCarousel();
+        };
+      });
+
+      // Escape hatch click for simulator testing
+      document.getElementById('btn-skip-to-simulator')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        const instructionsCard = document.getElementById('instructions-carousel-card');
+        const handoffCard = document.getElementById('desktop-handoff-card');
+        const quickStartBtn = document.getElementById('btn-quick-start-scan');
+        if (handoffCard) {
+          handoffCard.classList.add('hidden');
+          handoffCard.style.display = 'none';
+        }
+        if (instructionsCard) {
+          instructionsCard.classList.remove('hidden');
+          instructionsCard.style.display = 'flex';
+        }
+        if (quickStartBtn) {
+          quickStartBtn.classList.remove('hidden');
+          quickStartBtn.style.display = 'block';
+        }
+      });
+
+      carouselIndex = 0;
+      updateCarousel();
     }
 
     // --- PASTE THIS NEW STANDALONE FUNCTION AT THE BOTTOM OF YOUR FILE ---
@@ -54,7 +200,7 @@
         if (giftBtn) {
             giftBtn.onclick = (e) => {
                 e.preventDefault();
-                const giftMessage = `Hint hint! 🎁 I just measured my hand using Saubhagya Bangles' AR size estimator and my perfect size is ${detectedSize}! 💍 In case you were looking for gift ideas! 😉 Try it yourself or visit their boutique here:\n📍 Physical Shop: ${storeMapsUrl}\n📱 Measure at home: ${appUrl}`;
+                const giftMessage = `Hint hint! 🎁 I just measured my hand using Saubhagya Bangles' AR sizer, and my perfect size is ${detectedSize}! 💍 In case you were looking for gift ideas! 😉 Try it yourself or visit their boutique here:\n📍 Physical Shop: ${storeMapsUrl}\n📱 Measure at home: ${appUrl}`;
                 const whatsappDeepLink = `https://api.whatsapp.com/send?text=${encodeURIComponent(giftMessage)}`;
                 window.open(whatsappDeepLink, '_blank');
                 if (shareModal) shareModal.classList.add('hidden');
