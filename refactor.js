@@ -1,3 +1,4 @@
+
 const fs = require('fs');
 const path = require('path');
 
@@ -20,36 +21,7 @@ function extractSection(content, startMarker, endMarker) {
     fs.mkdirSync(path.join(__dirname, dir), { recursive: true });
 });
 
-// SPLIT CSS
-const cssContent = fs.readFileSync(path.join(cssDir, 'styles.css'), 'utf-8');
-
-const variablesCSS = cssContent.substring(0, cssContent.indexOf('/* Screen/View states */'));
-const layoutCSS = extractSection(cssContent, '/* Screen/View states */', '/* Carousel Onboarding styles */');
-const carouselCSS = extractSection(cssContent, '/* Carousel Onboarding styles */', '/* WebXR Viewports and Canvases */');
-const arHudCSS = extractSection(cssContent, '/* WebXR Viewports and Canvases */', '/* Result Overlay Modal */');
-const modalsCSS = extractSection(cssContent, '/* Result Overlay Modal */', '/* Error Overlay */');
-const errorCSS = extractSection(cssContent, '/* Error Overlay */', '/* Animations */');
-const animationsCSS = extractSection(cssContent, '/* Animations */', '/* PC Camera-less simulation background */');
-const testbedCSS = extractSection(cssContent, '/* PC Camera-less simulation background */', null);
-
-fs.writeFileSync(path.join(cssDir, 'variables.css'), variablesCSS);
-fs.writeFileSync(path.join(cssDir, 'layout.css'), layoutCSS);
-fs.writeFileSync(path.join(cssDir, 'components', 'carousel.css'), carouselCSS);
-fs.writeFileSync(path.join(cssDir, 'components', 'ar-hud.css'), arHudCSS);
-fs.writeFileSync(path.join(cssDir, 'components', 'modals.css'), modalsCSS + '\n' + errorCSS);
-fs.writeFileSync(path.join(cssDir, 'animations.css'), animationsCSS);
-fs.writeFileSync(path.join(cssDir, 'components', 'testbed.css'), testbedCSS);
-
-const mainCSS = `
-@import url('variables.css');
-@import url('layout.css');
-@import url('animations.css');
-@import url('components/carousel.css');
-@import url('components/ar-hud.css');
-@import url('components/modals.css');
-@import url('components/testbed.css');
-`;
-fs.writeFileSync(path.join(cssDir, 'styles.css'), mainCSS);
+// SPLIT CSS (Disabled because CSS is already permanently split and styles.css is now an import hub)
 
 // SPLIT JS (using global script loading to avoid complex ES module refactoring for 2200 lines of highly coupled code)
 const debugJS = extractSection(appJsContent, '// ONSCREEN DEBUG CONSOLE LOGGER', '// CONSTANTS & CONFIGURATION');

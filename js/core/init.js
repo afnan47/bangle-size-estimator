@@ -17,31 +17,10 @@
       });
 
       // 3. Handle complex view toggle navigations cleanly with optional chaining
-      document.getElementById('btn-view-instructions')?.addEventListener('click', () => {
-        const returningCard = document.getElementById('returning-user-card');
-        const carouselCard = document.getElementById('instructions-carousel-card');
-        
-        if (returningCard) { returningCard.style.display = 'none'; returningCard.classList.add('hidden'); }
-        if (carouselCard) { carouselCard.style.display = 'flex'; carouselCard.classList.remove('hidden'); }
-      });
-
       document.getElementById('btn-close-results')?.addEventListener('click', () => {
         document.getElementById('result-modal')?.classList.add('hidden');
         document.getElementById('screen-onboarding')?.classList.remove('hidden');
-        
-        // Reset instructions track mechanics cleanly
-        currentSlide = 0;
-        const track = document.getElementById('carousel-track');
-        if (track) track.style.transform = `translateX(0%)`;
-        
-        document.querySelectorAll('.carousel-dot').forEach((dot, idx) => {
-          dot.classList.toggle('active', idx === 0);
-        });
-        
-        const btnNext = document.getElementById('btn-carousel-next');
-        if (btnNext) btnNext.innerHTML = 'Next';
-        
-        checkReturningUser(); // Evaluate returning user elements
+        checkReturningUser();
       });
 
       document.getElementById('btn-error-close')?.addEventListener('click', () => {

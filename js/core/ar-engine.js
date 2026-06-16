@@ -212,8 +212,8 @@
 
     function recalibrate() {
       calibrationLocked = false;
+      isProcessingHand = false;
       stableMeasurementCount = 0;
-      unstableFrameCount = 0;
       kalmanFilter.reset(60.0);
       lastValidHandPositions = null;
       if (overlayCtx && overlayCanvas) {

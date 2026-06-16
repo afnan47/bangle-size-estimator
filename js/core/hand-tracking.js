@@ -33,17 +33,10 @@
         if (frameCount % 60 === 0) {
           console.log("Periodic: No hands detected by MediaPipe in this frame.");
         }
-        // Grace period for lost hand
-        unstableFrameCount++;
-        if (unstableFrameCount > 20) {
-          stableMeasurementCount = Math.max(0, stableMeasurementCount - 1);
-        }
+        // Reset calibration progress if hand is lost
+        stableMeasurementCount = Math.max(0, stableMeasurementCount - 2); 
         const progress = Math.round((stableMeasurementCount / REQUIRED_STABLE_FRAMES) * 100);
-        const isPaused = unstableFrameCount <= 20 && stableMeasurementCount > 0;
-        const displayMsg = isPaused 
-          ? "⏳ Hold still (Paused)... Point camera at hand." 
-          : "Point camera at hand. Squeeze your knuckles tight.";
-        updateHUD("Searching...", "-.- cm", progress, displayMsg);
+        updateHUD("Searching...", "-.- cm", progress, "Point camera at hand. Squeeze your knuckles tight.");
         
         // Draw dashed hand silhouette stencil to guide the user placement
         if (overlayCtx && overlayCanvas) {

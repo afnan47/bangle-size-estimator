@@ -1,67 +1,16 @@
 // RETURNING USER NAVIGATION GATE
     // ------------------------------------------------------------------------
     function checkReturningUser() {
-      const isReturning = localStorage.getItem('bangle_sizer_returning_user');
-      const returningCard = document.getElementById('returning-user-card');
+      // The returning user card is removed. We always show the instructions card.
       const carouselCard = document.getElementById('instructions-carousel-card');
-
-      if (!returningCard || !carouselCard) return;
-
-      if (isReturning === 'true') {
-        // Show Welcome Back Card
-        returningCard.classList.remove('hidden');
-        returningCard.style.display = 'block';
-
-        // Hide Carousel Instructions Card
-        carouselCard.classList.add('hidden');
-        carouselCard.style.display = 'none';
-      } else {
-        // Hide Welcome Back Card
-        returningCard.classList.add('hidden');
-        returningCard.style.display = 'none';
-
-        // Show Carousel Instructions Card
+      if (carouselCard) {
         carouselCard.classList.remove('hidden');
-        carouselCard.style.display = 'flex'; // Preserves the card flex alignment layout
+        carouselCard.style.display = 'flex';
       }
     }
 
     function initCarousel() {
-      const track = document.getElementById('carousel-track');
-      const dots = document.querySelectorAll('.carousel-dot');
-      const btnNext = document.getElementById('btn-carousel-next');
-      if (!track || !btnNext) return;
-
-      btnNext.onclick = () => {
-        if (currentSlide < totalSlides - 1) {
-          currentSlide++;
-          updateCarousel();
-        } else {
-          localStorage.setItem('bangle_sizer_returning_user', 'true');
-          startAR();
-        }
-      };
-
-      dots.forEach((dot, idx) => {
-        dot.onclick = () => {
-          currentSlide = idx;
-          updateCarousel();
-        };
-      });
-
-      function updateCarousel() {
-        track.style.transform = `translateX(-${(currentSlide * 100) / totalSlides}%)`;
-        dots.forEach((d, idx) => {
-          if (idx === currentSlide) d.classList.add('active');
-          else d.classList.remove('active');
-        });
-
-        if (currentSlide === totalSlides - 1) {
-          btnNext.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg> Start AR Sizer`;
-        } else {
-          btnNext.innerHTML = 'Next';
-        }
-      }
+      // Carousel is disabled; all instructions are shown at once.
     }
 
     // --- PASTE THIS NEW STANDALONE FUNCTION AT THE BOTTOM OF YOUR FILE ---
