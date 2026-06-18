@@ -1,0 +1,4 @@
+.env
+supabase_setup.sql
+
+.vercel
