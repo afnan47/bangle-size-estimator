@@ -61,9 +61,9 @@
     let prevWristPos = null; // [x, y, z] of wrist from previous frame
     const MAX_HISTORY_LENGTH = 60; // 2 seconds of history at 30fps
 
-    // One-Euro Filters for knuckle landmarks 5 & 17
-    const filterP5 = new OneEuroFilter3D(30, 1.0, 0.0005, 1.0);
-    const filterP17 = new OneEuroFilter3D(30, 1.0, 0.0005, 1.0);
+    // One-Euro Filters for knuckle landmarks 5 & 17 (Optimized via simulation)
+    const filterP5 = new OneEuroFilter3D(30, 0.96, 0.00106, 1.385);
+    const filterP17 = new OneEuroFilter3D(30, 0.96, 0.00106, 1.385);
     let isUpgradedSizerMode = true; // Enabled by default, can be toggled by the testbed simulation
     let isSimulationTestbedRunning = false;
     let selectedBangleStyle = 'gold-filigree'; // Options: 'gold-filigree', 'kundan-kada', 'polki-kada'

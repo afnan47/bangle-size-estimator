@@ -4,7 +4,20 @@
  */
 (function() {
   const TELEMETRY_ENDPOINT = '/api/log-feedback';
-  const DEBUG_LOGGING = true;
+  
+  function isLocalTest() {
+    const hn = window.location.hostname;
+    return hn === 'localhost' || 
+           hn === '127.0.0.1' || 
+           window.location.protocol === 'file:' || 
+           hn.endsWith('.local') ||
+           /^192\.168\./.test(hn) ||
+           /^10\./.test(hn) ||
+           /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hn) ||
+           window.location.search.includes('test=true');
+  }
+
+  const DEBUG_LOGGING = isLocalTest();
 
   // 1. Generate or retrieve non-persistent Session ID (lasts for the tab session)
   let sessionId = sessionStorage.getItem('bangle_sizer_session_id');

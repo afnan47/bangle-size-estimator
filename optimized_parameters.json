@@ -1,0 +1,34 @@
+{
+  "default": {
+    "parameters": {
+      "mincutoff": 1.0,
+      "beta": 0.0005,
+      "dcutoff": 1.0,
+      "trim_pct": 0.2,
+      "stable_thresh": 1.5,
+      "req_stable": 45.0
+    },
+    "metrics": {
+      "success_rate_pct": 87.5,
+      "avg_mae_mm": 0.25869641948229927,
+      "avg_lock_time_s": 4.1590476190476195,
+      "avg_jitter_mm": 0.17751336344126828
+    }
+  },
+  "optimized": {
+    "parameters": {
+      "mincutoff": 0.9599378294495121,
+      "beta": 0.0010628554700088681,
+      "dcutoff": 1.385205254611324,
+      "trim_pct": 0.28172121383420945,
+      "stable_thresh": 1.5438830209380203,
+      "req_stable": 40
+    },
+    "metrics": {
+      "success_rate_pct": 90.0,
+      "avg_mae_mm": 0.24900347450333035,
+      "avg_lock_time_s": 4.072222222222222,
+      "avg_jitter_mm": 0.16659515067742836
+    }
+  }
+}

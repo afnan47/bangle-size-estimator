@@ -1,6 +1,26 @@
 // ONSCREEN DEBUG CONSOLE LOGGER (OVERRIDE CONSOLE)
     // ------------------------------------------------------------------------
     (function() {
+      function isLocalTest() {
+        const hn = window.location.hostname;
+        return hn === 'localhost' || 
+               hn === '127.0.0.1' || 
+               window.location.protocol === 'file:' || 
+               hn.endsWith('.local') ||
+               /^192\.168\./.test(hn) ||
+               /^10\./.test(hn) ||
+               /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hn) ||
+               window.location.search.includes('test=true');
+      }
+
+      if (!isLocalTest()) {
+        // Silence console.log and console.info in production to optimize performance on mobile,
+        // but preserve warn and error for diagnostics.
+        console.log = () => {};
+        console.info = () => {};
+        return;
+      }
+
       const debugConsole = document.getElementById('debug-console');
       const debugToggle = document.getElementById('btn-toggle-debug');
       const debugOutput = document.getElementById('debug-log-output');
