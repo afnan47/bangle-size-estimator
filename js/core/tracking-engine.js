@@ -332,6 +332,15 @@
       
       // Save returning user flag
       localStorage.setItem('bangle_sizer_returning', 'true');
+
+      // Send telemetry measurement locked event
+      if (typeof window.BangleSizerTelemetry !== 'undefined') {
+        window.BangleSizerTelemetry.sendEvent('measurement_locked', {
+          raw_knuckle_width_mm: lastUncalibratedSmoothedWidth,
+          calibration_scale: calibrationScale,
+          recommended_size: recommendation.size
+        });
+      }
       
       // Show results card modal
       setTimeout(() => {

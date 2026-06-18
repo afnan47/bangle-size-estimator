@@ -37,6 +37,18 @@
         localStorage.setItem('bangle_sizer_calibration_scale', calibrationScale.toString());
         console.log(`Feedback confirmed: Scale saved -> ${calibrationScale.toFixed(4)}`);
 
+        // Send telemetry feedback submitted (correct)
+        if (typeof window.BangleSizerTelemetry !== 'undefined') {
+          const recommendedSize = document.getElementById('result-size-label')?.textContent || '';
+          window.BangleSizerTelemetry.sendEvent('feedback_submitted', {
+            raw_knuckle_width_mm: lastUncalibratedSmoothedWidth,
+            calibration_scale: calibrationScale,
+            recommended_size: recommendedSize,
+            user_size: recommendedSize,
+            is_correct: true
+          });
+        }
+
         document.querySelector('.feedback-buttons-row')?.classList.add('hidden');
         document.getElementById('feedback-sizes-container')?.classList.add('hidden');
         document.getElementById('feedback-success-msg')?.classList.remove('hidden');
@@ -53,10 +65,25 @@
           const recommendation = BANGLE_SIZES.find(sz => sz.size === correctSize);
           if (!recommendation) return;
 
+          // Capture telemetry info before update
+          const oldScale = calibrationScale;
+          const recommendedSize = document.getElementById('result-size-label')?.textContent || '';
+
           const targetWidth = recommendation.diameterMM + 2.0;
           if (lastUncalibratedSmoothedWidth > 10.0) {
             calibrationScale = targetWidth / lastUncalibratedSmoothedWidth;
             localStorage.setItem('bangle_sizer_calibration_scale', calibrationScale.toString());
+          }
+
+          // Send telemetry feedback submitted (incorrect corrected)
+          if (typeof window.BangleSizerTelemetry !== 'undefined') {
+            window.BangleSizerTelemetry.sendEvent('feedback_submitted', {
+              raw_knuckle_width_mm: lastUncalibratedSmoothedWidth,
+              calibration_scale: oldScale,
+              recommended_size: recommendedSize,
+              user_size: correctSize,
+              is_correct: false
+            });
           }
 
           document.querySelectorAll('.btn-feedback-circle').forEach(p => p.classList.remove('selected'));
