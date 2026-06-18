@@ -86,7 +86,7 @@
       setTimeout(() => {
         const numTrials = 10;
         const maxFrames = 300;
-        const requiredStable = 45;
+        const requiredStable = 40; // (Optimized via simulation)
 
         let baselineLocks = 0;
         let baselineLockSum = 0;
@@ -101,8 +101,8 @@
         for (let trial = 0; trial < numTrials; trial++) {
           const baseKalman = new KnuckleKalmanFilter();
           const upKalman = new KnuckleKalmanFilter();
-          const upFilterP5 = new OneEuroFilter3D(30, 1.0, 0.0005, 1.0);
-          const upFilterP17 = new OneEuroFilter3D(30, 1.0, 0.0005, 1.0);
+          const upFilterP5 = new OneEuroFilter3D(30, 0.96, 0.00106, 1.385); // (Optimized via simulation)
+          const upFilterP17 = new OneEuroFilter3D(30, 0.96, 0.00106, 1.385); // (Optimized via simulation)
 
           let baseStableCount = 0;
           let baseLockedWidth = null;
@@ -219,12 +219,12 @@
                   }
 
                   // 3. Trimmed Mean / Standard deviation based filtering
-                  const smoothed = getTrimmedMean(upMeasurementHistory, 0.2);
+                  const smoothed = getTrimmedMean(upMeasurementHistory, 0.28); // (Optimized via simulation)
                   const stdDev = getStandardDeviation(upMeasurementHistory);
 
                   const isHistoryReady = upMeasurementHistory.length >= 15;
 
-                  if (isHistoryReady && stdDev < 1.5) {
+                  if (isHistoryReady && stdDev < 1.54) { // (Optimized via simulation)
                     // Stable frame
                     upStableCount++;
                     upUnstableFrameCount = 0;
@@ -233,7 +233,7 @@
                       upLockedWidth = smoothed;
                       upLockFrame = f;
                     }
-                  } else if (isHistoryReady && stdDev < 2.5) {
+                  } else if (isHistoryReady && stdDev < 2.54) { // (Optimized via simulation)
                     // Shivering/Tremor detected (micro-movement)
                     upUnstableFrameCount++;
                     if (upUnstableFrameCount >= 15) {
@@ -244,6 +244,7 @@
                     if (upStableCount >= requiredStable) {
                       upLockedWidth = smoothed;
                       upLockFrame = f;
+                      break;
                     }
                   } else {
                     // High instability

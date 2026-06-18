@@ -127,6 +127,87 @@
         document.getElementById('btn-toggle-debug').style.display = 'none';
         document.getElementById('btn-toggle-testbed').style.display = 'none';
       }
+
+      // 5.8. Boutique Card toggle listener
+      const btnToggleBoutique = document.getElementById('btn-toggle-boutique');
+      const boutiqueContent = document.getElementById('boutique-content');
+      const boutiqueChevron = document.getElementById('boutique-chevron');
+      if (btnToggleBoutique && boutiqueContent && boutiqueChevron) {
+        btnToggleBoutique.addEventListener('click', (e) => {
+          e.preventDefault();
+          const isExpanded = boutiqueContent.classList.toggle('expanded');
+          if (isExpanded) {
+            boutiqueChevron.style.transform = 'rotate(180deg)';
+          } else {
+            boutiqueChevron.style.transform = 'rotate(0deg)';
+          }
+        });
+      }
+
+      // 5.9. Easter Egg: Triple-click the brand logo to reveal the GitHub link
+      const brandLogo = document.querySelector('.brand-logo');
+      const brandTagline = document.querySelector('.brand-tagline');
+      let clickCount = 0;
+      let clickTimer = null;
+      let taglineResetTimer = null;
+      const originalTagline = brandTagline ? brandTagline.textContent : 'Find the right bangle size for you';
+
+      if (brandLogo && brandTagline) {
+        brandLogo.addEventListener('click', () => {
+          clickCount++;
+          if (clickTimer) clearTimeout(clickTimer);
+          if (taglineResetTimer) clearTimeout(taglineResetTimer);
+          
+          // Trigger light reflection shimmer animation
+          brandLogo.classList.remove('easter-egg-spin');
+          void brandLogo.offsetWidth; // Trigger reflow to restart animation
+          brandLogo.classList.add('easter-egg-spin');
+          setTimeout(() => {
+            brandLogo.classList.remove('easter-egg-spin');
+          }, 1100);
+
+          
+          // Trigger haptic feedback on supported mobile browsers
+          if (navigator.vibrate) {
+            if (clickCount === 1) {
+              navigator.vibrate(15);
+            } else if (clickCount === 2) {
+              navigator.vibrate(25);
+            } else if (clickCount === 3) {
+              navigator.vibrate([40, 60, 40]);
+            }
+          }
+          
+          if (clickCount === 1) {
+            brandTagline.innerHTML = '<span style="color: var(--accent-gold); text-shadow: 0 0 8px rgba(212, 175, 55, 0.4);">✦ Tap twice more to inspect ✦</span>';
+          } else if (clickCount === 2) {
+            brandTagline.innerHTML = '<span style="color: var(--accent-gold); text-shadow: 0 0 12px rgba(212, 175, 55, 0.6);">✦ Tap once more... ✦</span>';
+          }
+          
+          if (clickCount === 3) {
+            clickCount = 0;
+            brandTagline.textContent = originalTagline;
+            
+            // Show link
+            const ghLink = document.getElementById('github-easter-egg');
+            if (ghLink) {
+              ghLink.classList.remove('hidden');
+              ghLink.style.display = 'flex';
+              ghLink.classList.add('fade-in-egg');
+            }
+          } else {
+            // Reset state if they stop tapping
+            clickTimer = setTimeout(() => {
+              clickCount = 0;
+              brandTagline.style.opacity = '0';
+              taglineResetTimer = setTimeout(() => {
+                brandTagline.textContent = originalTagline;
+                brandTagline.style.opacity = '1';
+              }, 250);
+            }, 2000); // 2 seconds window to complete the taps
+          }
+        });
+      }
     });
 
     function isLocalTest() {

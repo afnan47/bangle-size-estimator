@@ -60,6 +60,7 @@
   font-weight: 400;
   letter-spacing: 0.15em;
   text-transform: uppercase;
+  transition: opacity 0.25s var(--ease-ios), color 0.25s var(--ease-ios);
 }
 
 .card {
@@ -132,4 +133,88 @@
   color: var(--text-secondary);
   line-height: 1.45;
 }
+
+/* Boutique Location Card */
+.boutique-card {
+  transition: all 0.4s var(--ease-ios);
+  user-select: none;
+  margin-bottom: 24px;
+}
+
+.boutique-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-active);
+}
+
+.boutique-content {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.4s var(--ease-ios), opacity 0.3s ease, padding 0.4s var(--ease-ios);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.boutique-content.expanded {
+  max-height: 500px;
+  opacity: 1;
+  padding-top: 20px;
+}
+
+.boutique-info-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.boutique-info-item h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent-gold-light);
+  margin-bottom: 2px;
+}
+
+.boutique-info-item p {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.boutique-info-item a {
+  color: var(--accent-gold);
+  text-decoration: none;
+  border-bottom: 1px dashed rgba(212, 175, 55, 0.4);
+  transition: all 0.2s ease;
+}
+
+.boutique-info-item a:hover {
+  color: var(--accent-gold-light);
+  border-bottom-color: var(--accent-gold-light);
+}
+
+.boutique-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  cursor: pointer;
+}
+
+.boutique-header .card-title {
+  margin-bottom: 0 !important;
+}
+
+@media (max-height: 840px), (max-width: 480px) {
+  .boutique-content.expanded {
+    max-height: 400px;
+  }
+  .boutique-info-item h4 {
+    font-size: 0.82rem;
+  }
+  .boutique-info-item p {
+    font-size: 0.76rem;
+  }
+}
+
 

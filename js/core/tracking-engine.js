@@ -162,7 +162,7 @@
         }
 
         // 3. Trimmed Mean / Standard deviation based filtering
-        smoothedKnuckleWidth = getTrimmedMean(measurementHistory, 0.2); // 20% trim
+        smoothedKnuckleWidth = getTrimmedMean(measurementHistory, 0.28); // 28% trim (Optimized via simulation)
         lastUncalibratedSmoothedWidth = smoothedKnuckleWidth / calibrationScale;
 
         const stdDev = getStandardDeviation(measurementHistory);
@@ -171,7 +171,7 @@
         // We require at least 15 samples to begin trusting the sliding window stdDev
         const isHistoryReady = measurementHistory.length >= 15;
         
-        if (isHistoryReady && stdDev < 1.5) {
+        if (isHistoryReady && stdDev < 1.54) { // (Optimized via simulation)
           // Stable frame
           stableMeasurementCount++;
           unstableFrameCount = 0;
@@ -210,7 +210,7 @@
           if (stableMeasurementCount >= REQUIRED_STABLE_FRAMES) {
             lockCalibration(smoothedKnuckleWidth);
           }
-        } else if (isHistoryReady && stdDev < 2.5) {
+        } else if (isHistoryReady && stdDev < 2.54) { // (Optimized via simulation)
           // Shivering/Tremor detected (micro-movement: stdDev is elevated but below 2.5mm, velocity is low)
           unstableFrameCount++;
           
