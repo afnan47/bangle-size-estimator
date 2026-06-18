@@ -31,12 +31,7 @@
         depth17 = lm17.z;
         depth0 = lm0.z;
       } else if (isWebcamDemo) {
-        const dx = lm5.x - lm17.x;
-        const dy = lm5.y - lm17.y;
-        const distPixels = Math.sqrt(dx * dx + dy * dy);
-        
-        const simulatedDepth = (0.0625 * 1.29) / (2.0 * Math.max(0.01, distPixels));
-        depth5 = depth17 = depth0 = Math.max(0.20, Math.min(1.0, simulatedDepth));
+        depth5 = depth17 = depth0 = 0.30; // 30 cm fixed-distance assumption
       } else {
         try {
           depth5 = getFilteredDepth(xrDepthInfo, u5, v5);
@@ -199,11 +194,14 @@
           drawHandWireframe(landmarks, true, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
           drawProjectedBangleOverlay(p5_3d, p17_3d, smoothedKnuckleWidth, p0_3d);
 
+          const calibInstruct = isWebcamDemo
+            ? "Keep phone 12\" (30cm) above & perfectly still. Calibrating..."
+            : "Hold perfectly still. Calibrating...";
           updateHUD(
             "Calibrating", 
             `${(smoothedKnuckleWidth / 10).toFixed(2)} cm`, 
             getProgressPct(), 
-            "Hold perfectly still. Calibrating...",
+            calibInstruct,
             false,
             palmPitchDeg,
             depth5
@@ -246,9 +244,9 @@
 
           drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
           
-          const instructionMsg = !isHistoryReady 
-            ? "Hold hand still to start calibration..." 
-            : "⚠️ Movement detected. Hold hand completely still!";
+          const instructionMsg = isWebcamDemo
+            ? (!isHistoryReady ? "Hold phone 12\" (30cm) directly above and still..." : "⚠️ Movement detected. Keep 12\" distance and hold still!")
+            : (!isHistoryReady ? "Hold hand still to start calibration..." : "⚠️ Movement detected. Hold hand completely still!");
             
           updateHUD(
             "Unstable", 
@@ -291,11 +289,14 @@
           drawHandWireframe(landmarks, true, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
           drawProjectedBangleOverlay(p5_3d, p17_3d, smoothedKnuckleWidth, p0_3d);
           
+          const calibInstruct = isWebcamDemo
+            ? "Keep phone 12\" (30cm) above & perfectly still. Calibrating..."
+            : "Hold perfectly still. Calibrating...";
           updateHUD(
             "Calibrating", 
             `${(smoothedKnuckleWidth / 10).toFixed(2)} cm`, 
             getProgressPct(), 
-            "Hold perfectly still. Calibrating...",
+            calibInstruct,
             false,
             palmPitchDeg,
             depth5
@@ -309,11 +310,14 @@
           lastValidHandPositions = null;
           
           drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
+          const baselineUnstableInstruct = isWebcamDemo
+            ? "⚠️ Movement detected. Keep 12\" distance and hold still!"
+            : "⚠️ Movement detected. Hold hand completely still!";
           updateHUD(
             "Unstable", 
             `${(calibratedWidth / 10).toFixed(2)} cm`, 
             getProgressPct(), 
-            "⚠️ Movement detected. Hold hand completely still!", 
+            baselineUnstableInstruct, 
             true,
             palmPitchDeg,
             depth5
@@ -340,6 +344,16 @@
           calibration_scale: calibrationScale,
           recommended_size: recommendation.size
         });
+      }
+      
+      // Show or hide precision recommendation note depending on sizer mode
+      const precNote = document.getElementById('precision-recommendation-note');
+      if (precNote) {
+        if (isWebcamDemo) {
+          precNote.classList.remove('hidden');
+        } else {
+          precNote.classList.add('hidden');
+        }
       }
       
       // Show results card modal

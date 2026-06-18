@@ -63,6 +63,19 @@
         xrRefSpace = await xrSession.requestReferenceSpace('local');
         console.log("SUCCESS: XR local reference space obtained.");
 
+        // Update Sizer Mode badges for WebXR Precision Scan
+        const modeBadge = document.getElementById('sizer-mode-badge');
+        if (modeBadge) {
+          modeBadge.textContent = "WebXR Precision Scan";
+          modeBadge.style.color = "var(--accent-gold)";
+          modeBadge.style.background = "rgba(212, 175, 55, 0.15)";
+          modeBadge.style.borderColor = "rgba(212, 175, 55, 0.3)";
+        }
+        const resultBadge = document.getElementById('result-mode-badge');
+        if (resultBadge) {
+          resultBadge.textContent = "WebXR Precision Scan";
+        }
+
         // Toggle UI
         screenOnboarding.classList.add('hidden');
         arContainer.classList.remove('hidden');
@@ -85,7 +98,7 @@
     async function startWebcamDemo() {
       setScanButtonsLoading(true);
       isWebcamDemo = true;
-      console.log("Initializing PC Webcam Demo Mode...");
+      console.log("Initializing PC Webcam Demo / Heuristic Mode...");
       
       const video = document.getElementById('webcam-video');
       if (!video) {
@@ -94,12 +107,17 @@
         return;
       }
 
+      // Check if mobile device to request the back (environment) camera
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const facing = isMobile ? "environment" : "user";
+      console.log(`Requesting camera facingMode: "${facing}"`);
+
       try {
         webcamStream = await navigator.mediaDevices.getUserMedia({
           video: {
-            facingMode: "user",
-            width: { ideal: 640 },
-            height: { ideal: 480 }
+            facingMode: facing,
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
           }
         });
         video.srcObject = webcamStream;
@@ -113,6 +131,19 @@
           };
         });
 
+        // Update Sizer Mode badges for Camera Estimate (Beta)
+        const modeBadge = document.getElementById('sizer-mode-badge');
+        if (modeBadge) {
+          modeBadge.textContent = "Camera Estimate (Beta)";
+          modeBadge.style.color = "#ffb03a";
+          modeBadge.style.background = "rgba(255, 176, 58, 0.12)";
+          modeBadge.style.borderColor = "rgba(255, 176, 58, 0.3)";
+        }
+        const resultBadge = document.getElementById('result-mode-badge');
+        if (resultBadge) {
+          resultBadge.textContent = "Camera Estimate (Beta)";
+        }
+
         // Hide onboarding, show AR container with video playing behind
         screenOnboarding.classList.add('hidden');
         arContainer.classList.remove('hidden');
@@ -120,8 +151,18 @@
         recalibrate();
         setScanButtonsLoading(false);
         
-        // Mock a projection matrix for the PC demo view
-        activeProjectionMatrix = [1.29, 0, 0, 0, 0, 1.73, 0, 0, 0, 0, -1, -1, 0, 0, -0.2, 0];
+        // Calculate projection matrix dynamically based on aspect ratio to keep pixels square in 3D
+        const videoWidth = video.videoWidth || 640;
+        const videoHeight = video.videoHeight || 480;
+        const aspect = videoHeight / videoWidth;
+        const m0 = 1.6; // baseline FOV scale
+        const m5 = m0 * aspect; // scale vertical focal length by aspect ratio to ensure square pixels
+        activeProjectionMatrix = [
+          m0, 0, 0, 0,
+          0, m5, 0, 0,
+          0, 0, -1, -1,
+          0, 0, -0.2, 0
+        ];
 
         // Start webcam frame rendering loop
         console.log("Launching Webcam Frame Loop...");

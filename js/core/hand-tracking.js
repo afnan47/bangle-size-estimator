@@ -37,7 +37,10 @@
         // Reset calibration progress if hand is lost
         stableMeasurementCount = Math.max(0, stableMeasurementCount - 2); 
         const progress = Math.round((stableMeasurementCount / REQUIRED_STABLE_FRAMES) * 100);
-        updateHUD("Searching...", "-.- cm", progress, "Point camera at hand. Squeeze your knuckles tight.");
+        const instructionText = isWebcamDemo 
+          ? 'Hold phone 12" (30cm) directly above your hand. Squeeze knuckles tight.'
+          : "Point camera at hand. Squeeze your knuckles tight.";
+        updateHUD("Searching...", "-.- cm", progress, instructionText);
         
         // Selective render: Only clear and redraw stencil when entering searching state
         if (lastRenderedState !== "searching") {

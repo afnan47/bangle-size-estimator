@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>WebXR Bangle Size Estimator</title>
-  <meta name="description" content="Production-grade contactless bangle size estimator using WebXR Depth-Sensing and MediaPipe Hands on Android.">
+  <meta name="description" content="Production-grade contactless bangle size estimator using WebXR Depth-Sensing on Android and Camera Estimate on iOS.">
   
   <!-- Premium Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -166,7 +166,7 @@
       
       <h3 style="font-family: var(--font-display); font-size: 1.6rem; font-weight: 500; color: var(--accent-gold-light); margin-bottom: -8px;">Scan on Your Phone</h3>
       <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; max-width: 320px;">
-        Saubhagya's AR Bangle Sizer uses advanced camera depth-sensing available on Android mobile devices.
+        Saubhagya's AR Bangle Sizer is optimized for mobile devices. Scan the QR code or visit this page on your phone's browser.
       </p>
 
       <!-- QR Code Container -->
@@ -176,9 +176,8 @@
 
       <!-- Compatibility Badges -->
       <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 8px;">
-        <span style="font-size: 0.68rem; color: var(--text-secondary); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 20px; font-weight: 500;">🤖 Android 8.0+</span>
-        <span style="font-size: 0.68rem; color: var(--text-secondary); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 20px; font-weight: 500;">🌐 Google Chrome</span>
-        <span style="font-size: 0.68rem; color: var(--text-secondary); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 20px; font-weight: 500;">✨ ARCore Enabled</span>
+        <span style="font-size: 0.68rem; color: var(--text-secondary); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 20px; font-weight: 500;">🤖 Android (WebXR Precision)</span>
+        <span style="font-size: 0.68rem; color: var(--text-secondary); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 20px; font-weight: 500;">🍎 iOS (Camera Estimate)</span>
       </div>
 
       <!-- Escape hatches -->
@@ -191,7 +190,11 @@
     </div>
     
     <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 16px; max-width: 320px; line-height: 1.4; margin-bottom: 24px;">
-      Requires an Android device with Google Play Services for AR (ARCore) in Google Chrome.
+      Requires iOS (Safari) or Android (Chrome, Samsung Internet, Firefox, Opera, Edge).
+    </div>
+    
+    <div style="font-size: 0.68rem; color: var(--text-muted); text-align: center; margin-top: -16px; max-width: 320px; line-height: 1.4; margin-bottom: 24px; opacity: 0.8;">
+      💡 Tip: For the most accurate, hardware-calibrated scan, use an Android device with Google Chrome.
     </div>
 
     <!-- Legal & Privacy Footer -->
@@ -222,6 +225,11 @@
         <div class="hud-status-row">
           <span id="badge-status" class="status-badge searching">Searching...</span>
           <span id="live-width" class="live-width-val">-.- cm</span>
+        </div>
+        
+        <!-- Sizer Mode Badge -->
+        <div id="sizer-mode-container" style="display: flex; justify-content: flex-start; margin-bottom: 12px; margin-top: -6px;">
+          <span id="sizer-mode-badge" class="mode-badge" style="font-size: 0.65rem; font-weight: 700; color: var(--accent-gold); background: rgba(212, 175, 55, 0.12); border: 1px solid rgba(212, 175, 55, 0.25); padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em;">WebXR Precision Scan</span>
         </div>
         
         <!-- Stability Progress Bar -->
@@ -266,6 +274,11 @@
       
       <h2 class="result-title">Sizing Locked</h2>
       <p class="result-subtitle">Your measurements have been successfully calibrated.</p>
+
+      <!-- Sizer Mode Badge in Results -->
+      <div id="result-mode-container" style="display: flex; justify-content: center; margin-bottom: 20px; margin-top: -8px;">
+        <span id="result-mode-badge" class="mode-badge" style="font-size: 0.65rem; font-weight: 700; color: var(--accent-gold); background: rgba(212, 175, 55, 0.12); border: 1px solid rgba(212, 175, 55, 0.25); padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em;">WebXR Precision Scan</span>
+      </div>
       
       <!-- Premium Size Visualizer -->
       <div class="size-ring-display">
@@ -344,6 +357,11 @@
           Thank you for your feedback!
         </div>
       </div>
+      
+      <!-- Precision recommendation for Camera Estimate users -->
+      <div id="precision-recommendation-note" class="hidden" style="margin-top: 20px; padding: 12px 16px; background: rgba(212, 175, 55, 0.04); border: 1px solid rgba(212, 175, 55, 0.15); border-radius: 18px; font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4; text-align: center; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);">
+        ✨ <strong>Want absolute precision?</strong> Try scanning on an Android device running Google Chrome for hardware depth-sensing.
+      </div>
     </div>
   </section>
 
@@ -394,10 +412,9 @@
       <div id="error-troubleshoot" style="text-align: left; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; margin-bottom: 24px;">
         <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">How to fix:</h4>
         <ul style="font-size: 0.8rem; color: var(--text-secondary); padding-left: 18px; line-height: 1.4;">
-          <li style="margin-bottom: 4px;">Ensure you are using **Google Chrome** on **Android**.</li>
-          <li style="margin-bottom: 4px;">Confirm **Google Play Services for AR** is installed.</li>
-          <li style="margin-bottom: 4px;">Make sure your page is loaded securely (HTTPS or localhost).</li>
-          <li>Accept camera access when requested.</li>
+          <li style="margin-bottom: 4px;">Allow camera access when prompted by your browser.</li>
+          <li style="margin-bottom: 4px;">Ensure you are using Safari (on iOS) or Chrome / Samsung Internet (on Android) for the best experience.</li>
+          <li style="margin-bottom: 4px;">Make sure your connection is secure (HTTPS).</li>
         </ul>
       </div>
 

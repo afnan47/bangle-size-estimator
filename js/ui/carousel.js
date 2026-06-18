@@ -3,6 +3,7 @@
     function checkBrowserDeviceSupport() {
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       const isAndroid = /Android/i.test(navigator.userAgent);
+      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
       
       const instructionsCard = document.getElementById('instructions-carousel-card');
       const handoffCard = document.getElementById('desktop-handoff-card');
@@ -17,7 +18,7 @@
 
       const isReturning = localStorage.getItem('bangle_sizer_returning') === 'true';
 
-      if (isAndroid || (isMobile && window.location.search.includes('bypass=true')) || isLocalTest()) {
+      if (isAndroid || isIOS || (isMobile && window.location.search.includes('bypass=true')) || isLocalTest()) {
         if (handoffCard) {
           handoffCard.classList.add('hidden');
           handoffCard.style.display = 'none';
@@ -265,11 +266,20 @@
     }
     function drawHandStencil(ctx, w, h) {
       ctx.save();
-      ctx.strokeStyle = "rgba(212, 175, 55, 0.4)";
-      ctx.lineWidth = 2.5;
-      ctx.setLineDash([8, 6]);
-      ctx.shadowBlur = 6;
-      ctx.shadowColor = "rgba(212, 175, 55, 0.15)";
+      // On iOS/Webcam fallback, use lower opacity for positioning guide
+      if (typeof isWebcamDemo !== 'undefined' && isWebcamDemo) {
+        ctx.strokeStyle = "rgba(212, 175, 55, 0.18)";
+        ctx.lineWidth = 2.0;
+        ctx.setLineDash([6, 6]);
+        ctx.shadowBlur = 4;
+        ctx.shadowColor = "rgba(212, 175, 55, 0.08)";
+      } else {
+        ctx.strokeStyle = "rgba(212, 175, 55, 0.4)";
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([8, 6]);
+        ctx.shadowBlur = 6;
+        ctx.shadowColor = "rgba(212, 175, 55, 0.15)";
+      }
       
       const centerX = w / 2;
       const centerY = h / 2 + h * 0.03;
@@ -307,26 +317,39 @@
       // Wrist right side
       ctx.lineTo(centerX + scale * 0.22, centerY + scale * 0.5);
       ctx.stroke();
- 
+  
       // Knuckle line
       ctx.beginPath();
-      ctx.setLineDash([3, 3]);
-      ctx.strokeStyle = "rgba(212, 175, 55, 0.25)";
+      if (typeof isWebcamDemo !== 'undefined' && isWebcamDemo) {
+        ctx.setLineDash([2, 4]);
+        ctx.strokeStyle = "rgba(212, 175, 55, 0.15)";
+      } else {
+        ctx.setLineDash([3, 3]);
+        ctx.strokeStyle = "rgba(212, 175, 55, 0.25)";
+      }
       ctx.moveTo(centerX - scale * 0.18, centerY);
       ctx.lineTo(centerX + scale * 0.18, centerY);
       ctx.stroke();
       
-      ctx.fillStyle = "rgba(212, 175, 55, 0.55)";
+      if (typeof isWebcamDemo !== 'undefined' && isWebcamDemo) {
+        ctx.fillStyle = "rgba(212, 175, 55, 0.3)";
+      } else {
+        ctx.fillStyle = "rgba(212, 175, 55, 0.55)";
+      }
       ctx.beginPath();
       ctx.arc(centerX - scale * 0.18, centerY, 5, 0, 2 * Math.PI);
       ctx.arc(centerX + scale * 0.18, centerY, 5, 0, 2 * Math.PI);
       ctx.fill();
- 
-      ctx.fillStyle = "rgba(212, 175, 55, 0.65)";
+  
+      ctx.fillStyle = (typeof isWebcamDemo !== 'undefined' && isWebcamDemo) ? "rgba(212, 175, 55, 0.45)" : "rgba(212, 175, 55, 0.65)";
       ctx.font = "700 11px 'Montserrat', sans-serif";
       ctx.textAlign = "center";
       ctx.setLineDash([]);
-      ctx.fillText("ALIGN KNUCKLES HERE", centerX, centerY + scale * 0.62);
+      
+      const guideText = (typeof isWebcamDemo !== 'undefined' && isWebcamDemo) 
+        ? "POSITIONING GUIDE (KEEP 12\" / 30CM DISTANCE)" 
+        : "ALIGN KNUCKLES HERE";
+      ctx.fillText(guideText, centerX, centerY + scale * 0.62);
       
       ctx.restore();
     }
