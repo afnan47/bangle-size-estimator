@@ -94,12 +94,12 @@
         this.filtZ = new OneEuroFilter(freq, mincutoff, beta, dcutoff);
       }
 
-      filter(val, timestamp) {
-        return [
-          this.filtX.filter(val[0], timestamp),
-          this.filtY.filter(val[1], timestamp),
-          this.filtZ.filter(val[2], timestamp)
-        ];
+      filter(val, timestamp, out) {
+        const target = out || [0, 0, 0];
+        target[0] = this.filtX.filter(val[0], timestamp);
+        target[1] = this.filtY.filter(val[1], timestamp);
+        target[2] = this.filtZ.filter(val[2], timestamp);
+        return target;
       }
 
       reset() {

@@ -18,11 +18,37 @@
     let downsampleWidth = 0;
     let downsampleHeight = 0;
     
+    // Cached pixel buffers for GC prevention
+    let cachedPixels = null;
+    let cachedPixels32 = null;
+    let cachedImageData = null;
+    let cachedRawPixels = null;
+    
     let isProcessingHand = false;
+    let trackingThrottleRate = 3; // Adaptive frame throttle rate (processes every N frames)
+    let lastDetectionTimeMs = 0;  // MediaPipe detection latency in ms
+    let lastRenderedState = null; // State of the last overlay draw ('searching', 'tracking', etc.)
     let calibrationLocked = false;
     let stableMeasurementCount = 0;
     let unstableFrameCount = 0; // Tracks consecutive unstable frames for grace period
     let activeProjectionMatrix = null;
+    
+    // Preallocated math vectors to eliminate GC pressure
+    const temp_p0_raw = [0, 0, 0];
+    const temp_p5_raw = [0, 0, 0];
+    const temp_p17_raw = [0, 0, 0];
+    const temp_v1 = [0, 0, 0];
+    const temp_v2 = [0, 0, 0];
+    const temp_palmNormal = [0, 0, 0];
+    const temp_unitNormal = [0, 0, 0];
+    const temp_p5_3d = [0, 0, 0];
+    const temp_p17_3d = [0, 0, 0];
+
+    const preallocatedLastValidHandPositions = {
+      p5: [0, 0, 0],
+      p17: [0, 0, 0],
+      wrist: [0, 0, 0]
+    };
     
     const kalmanFilter = new KnuckleKalmanFilter();
     let smoothedKnuckleWidth = 60.0;
@@ -30,7 +56,7 @@
     let lastUncalibratedSmoothedWidth = 60.0;
     let isWebcamDemo = false;
     let webcamStream = null;
-    let lastValidHandPositions = null; // Stores [{x_view, y_view, z_view}, ...] for rendering bangle circles
+    let lastValidHandPositions = null; // References preallocatedLastValidHandPositions when valid
 
     // One-Euro Filters for knuckle landmarks 5 & 17
     const filterP5 = new OneEuroFilter3D(30, 1.0, 0.0005, 1.0);

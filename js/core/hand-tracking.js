@@ -15,12 +15,13 @@
     console.log("MediaPipe Hands options configured.");
 
     handsDetector.onResults((results) => {
-      // Clear overlay canvas
-      if (overlayCtx && overlayCanvas) {
-        overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-      }
-      
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        // Clear overlay canvas for active tracking draw
+        if (overlayCtx && overlayCanvas) {
+          overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+        }
+        lastRenderedState = "tracking";
+
         if (!handFirstDetected) {
           handFirstDetected = true;
           console.log("SUCCESS: MediaPipe Hands detected a hand!");
@@ -38,20 +39,45 @@
         const progress = Math.round((stableMeasurementCount / REQUIRED_STABLE_FRAMES) * 100);
         updateHUD("Searching...", "-.- cm", progress, "Point camera at hand. Squeeze your knuckles tight.");
         
-        // Draw dashed hand silhouette stencil to guide the user placement
-        if (overlayCtx && overlayCanvas) {
-          drawHandStencil(overlayCtx, overlayCanvas.width, overlayCanvas.height);
+        // Selective render: Only clear and redraw stencil when entering searching state
+        if (lastRenderedState !== "searching") {
+          if (overlayCtx && overlayCanvas) {
+            overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+            drawHandStencil(overlayCtx, overlayCanvas.width, overlayCanvas.height);
+          }
+          lastRenderedState = "searching";
         }
       }
     });
 
-    async function detectHandLandmarks(canvasElement, xrView) {
-      activeProjectionMatrix = xrView.projectionMatrix;
-      await handsDetector.send({ image: canvasElement });
+    async function detectHandLandmarks(imageSource, xrView = null) {
+      if (xrView) {
+        activeProjectionMatrix = xrView.projectionMatrix;
+      }
+      const startTime = performance.now();
+      await handsDetector.send({ image: imageSource });
+      lastDetectionTimeMs = performance.now() - startTime;
+
+      // Adaptive Throttling: balance latency vs CPU heat / battery
+      if (lastDetectionTimeMs > 60) {
+        // Slow device: throttle hard to prevent render frame drops
+        trackingThrottleRate = 6;
+      } else if (lastDetectionTimeMs > 40) {
+        trackingThrottleRate = 4;
+      } else {
+        // Fast device: adjust based on tracking stability to save power
+        if (stableMeasurementCount > 12) {
+          trackingThrottleRate = 6; // Steady tracking, sample slower
+        } else if (stableMeasurementCount > 5) {
+          trackingThrottleRate = 4;
+        } else {
+          trackingThrottleRate = 3; // Searching or unstable, sample fast
+        }
+      }
     }
 
     // Exact 3D view-space coordinates calculation without needing gl-matrix library
-    function unproject(lm, depth, projectionMatrix) {
+    function unproject(lm, depth, projectionMatrix, out) {
       // 1. Convert normalized MediaPipe coordinates to Normalized Device Coordinates (NDC)
       // MediaPipe x: [0, 1] (left to right), y: [0, 1] (top to bottom)
       // NDC x: [-1, 1] (left to right), y: [-1, 1] (bottom to top)
@@ -68,11 +94,12 @@
       // X = ((ndcX + M20) / M00) * depth
       // Y = ((ndcY + M21) / M11) * depth
       // Z = -depth (WebGl camera points towards negative Z axis)
-      const x = ((ndcX + m8) / m0) * depth;
-      const y = ((ndcY + m9) / m5) * depth;
-      const z = -depth;
+      const target = out || [0, 0, 0];
+      target[0] = ((ndcX + m8) / m0) * depth;
+      target[1] = ((ndcY + m9) / m5) * depth;
+      target[2] = -depth;
 
-      return [x, y, z];
+      return target;
     }
 
     function getFilteredDepth(depthInfo, u, v) {

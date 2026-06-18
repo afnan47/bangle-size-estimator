@@ -156,9 +156,9 @@
           drawBangleStaticOverlay();
         } else if (isSimulatingScan) {
           drawSimulatedFrame();
-        } else if (!isProcessingHand && (frameCount % 3 === 0)) {
+        } else if (!isProcessingHand && (frameCount % trackingThrottleRate === 0)) {
           isProcessingHand = true;
-          handsDetector.send({ image: video }).finally(() => {
+          detectHandLandmarks(video).finally(() => {
             isProcessingHand = false;
           });
         }
@@ -216,6 +216,7 @@
       stableMeasurementCount = 0;
       kalmanFilter.reset(60.0);
       lastValidHandPositions = null;
+      lastRenderedState = null;
       if (overlayCtx && overlayCanvas) {
         overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
       }

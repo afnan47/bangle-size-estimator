@@ -60,7 +60,18 @@
           targetWidth = Math.round((cameraWidth / cameraHeight) * maxDim);
         }
 
-        const pixels = new Uint8Array(targetWidth * targetHeight * 4);
+        const sizeInBytes = targetWidth * targetHeight * 4;
+
+        // Ensure cache buffers are allocated and matching dimensions
+        if (!cachedPixels || cachedPixels.length !== sizeInBytes) {
+          cachedPixels = new Uint8Array(sizeInBytes);
+          cachedPixels32 = new Uint32Array(cachedPixels.buffer);
+          
+          offscreenCanvas.width = targetWidth;
+          offscreenCanvas.height = targetHeight;
+          cachedImageData = offscreenCtx.createImageData(targetWidth, targetHeight);
+          console.log(`Allocated/resized frame caches. targetWidth: ${targetWidth}, targetHeight: ${targetHeight}`);
+        }
 
         if (gl instanceof WebGL2RenderingContext) {
           // 1. Initialize downsample framebuffer
@@ -94,7 +105,6 @@
 
           // 4. Read pixels asynchronously using PBOs if upgraded mode is active
           if (isUpgradedSizerMode) {
-            const sizeInBytes = targetWidth * targetHeight * 4;
             // Initialize PBOs if needed
             if (!isPboInitialized) {
               pboBuffers[0] = gl.createBuffer();
@@ -120,9 +130,9 @@
                 gl.deleteSync(fence);
                 pboFences[nextPboIndex] = null;
                 
-                // Read pixels from completed buffer
+                // Read pixels from completed buffer directly into cachedPixels
                 gl.bindBuffer(gl.PIXEL_PACK_BUFFER, pboBuffers[nextPboIndex]);
-                gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, pixels);
+                gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, cachedPixels);
                 gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
                 readbackCompleted = true;
               }
@@ -144,9 +154,9 @@
               return null;
             }
           } else {
-            // Synchronous fallback
+            // Synchronous fallback into cachedPixels
             gl.bindFramebuffer(gl.READ_FRAMEBUFFER, downsampleFBO);
-            gl.readPixels(0, 0, targetWidth, targetHeight, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+            gl.readPixels(0, 0, targetWidth, targetHeight, gl.RGBA, gl.UNSIGNED_BYTE, cachedPixels);
           }
         } else {
           // WebGL1 Fallback: bind camera texture directly to FBO and read (no blit support)
@@ -156,20 +166,22 @@
           gl.bindFramebuffer(gl.FRAMEBUFFER, cameraFBO);
           gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, cameraTexture, 0);
           
-          const rawPixels = new Uint8Array(cameraWidth * cameraHeight * 4);
-          gl.readPixels(0, 0, cameraWidth, cameraHeight, gl.RGBA, gl.UNSIGNED_BYTE, rawPixels);
+          if (!cachedRawPixels || cachedRawPixels.length !== cameraWidth * cameraHeight * 4) {
+            cachedRawPixels = new Uint8Array(cameraWidth * cameraHeight * 4);
+          }
+          gl.readPixels(0, 0, cameraWidth, cameraHeight, gl.RGBA, gl.UNSIGNED_BYTE, cachedRawPixels);
           
-          // CPU scaling downsampler
+          // CPU scaling downsampler using 32-bit views
+          const rawPixels32 = new Uint32Array(cachedRawPixels.buffer);
+          const pixels32 = cachedPixels32;
+          
           for (let y = 0; y < targetHeight; y++) {
             const srcY = Math.floor((y / targetHeight) * cameraHeight);
+            const srcIdxOffset = srcY * cameraWidth;
+            const destIdxOffset = y * targetWidth;
             for (let x = 0; x < targetWidth; x++) {
               const srcX = Math.floor((x / targetWidth) * cameraWidth);
-              const srcIdx = (srcX + srcY * cameraWidth) * 4;
-              const destIdx = (x + y * targetWidth) * 4;
-              pixels[destIdx] = rawPixels[srcIdx];
-              pixels[destIdx+1] = rawPixels[srcIdx+1];
-              pixels[destIdx+2] = rawPixels[srcIdx+2];
-              pixels[destIdx+3] = rawPixels[srcIdx+3];
+              pixels32[destIdxOffset + x] = rawPixels32[srcIdxOffset + srcX];
             }
           }
         }
@@ -180,26 +192,26 @@
         // Debug check to verify FBO pixels are not completely blank
         if (frameCount % 60 === 0) {
           let allZero = true;
-          const stride = Math.floor(pixels.length / 200);
-          for (let i = 0; i < pixels.length; i += stride) {
-            if (pixels[i] !== 0) { allZero = false; break; }
+          const stride = Math.floor(cachedPixels.length / 200);
+          for (let i = 0; i < cachedPixels.length; i += stride) {
+            if (cachedPixels[i] !== 0) { allZero = false; break; }
           }
           console.log("FBO Blit Check - targetWidth: " + targetWidth + ", targetHeight: " + targetHeight + ", is FBO buffer blank?", allZero);
         }
 
         // Draw pixel data onto canvas for MediaPipe input
-        offscreenCanvas.width = targetWidth;
-        offscreenCanvas.height = targetHeight;
-        const imageData = offscreenCtx.createImageData(targetWidth, targetHeight);
+        // Using Uint32Array view of ImageData buffer for 4x faster block copies
+        const pixels32 = cachedPixels32;
+        const destPixels32 = new Uint32Array(cachedImageData.data.buffer);
 
         // Flip image vertically since WebGL framebuffer origin is bottom-left
         for (let y = 0; y < targetHeight; y++) {
-          const srcRow = y * targetWidth * 4;
-          const destRow = (targetHeight - 1 - y) * targetWidth * 4;
-          imageData.data.set(pixels.subarray(srcRow, srcRow + targetWidth * 4), destRow);
+          const srcRow = y * targetWidth;
+          const destRow = (targetHeight - 1 - y) * targetWidth;
+          destPixels32.set(pixels32.subarray(srcRow, srcRow + targetWidth), destRow);
         }
 
-        offscreenCtx.putImageData(imageData, 0, 0);
+        offscreenCtx.putImageData(cachedImageData, 0, 0);
         return offscreenCanvas;
       } catch (err) {
         console.error("Error in extractWebXRFrame:", err);

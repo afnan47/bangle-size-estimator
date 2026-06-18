@@ -32,15 +32,14 @@
       if (!isNoCameraSim) return;
       frameCount++;
 
-      // Clear overlay canvas
-      if (overlayCtx && overlayCanvas) {
-        overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-      }
-
       if (calibrationLocked) {
         drawBangleStaticOverlay();
+        lastRenderedState = "locked";
       } else {
         if (isSimulationTestbedRunning) {
+          if (overlayCtx && overlayCanvas) {
+            overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+          }
           const gtWidth = parseFloat(document.getElementById('slide-gt-width').value);
           const gtPitch = parseFloat(document.getElementById('slide-gt-pitch').value);
           const gtDepth = parseFloat(document.getElementById('slide-gt-depth').value) / 100; // cm to m
@@ -49,13 +48,22 @@
 
           const frameData = generateSimulatedHand(gtWidth, gtPitch, gtDepth, jitter, drift, frameCount);
           processHandLandmarks(frameData.landmarks);
+          lastRenderedState = "testbed";
         } else if (!isSimulatingScan) {
-          // Draw dashed guide stencil
-          if (overlayCtx && overlayCanvas) {
-            drawHandStencil(overlayCtx, overlayCanvas.width, overlayCanvas.height);
+          // Draw dashed guide stencil only when transitioning to searching state
+          if (lastRenderedState !== "searching") {
+            if (overlayCtx && overlayCanvas) {
+              overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+              drawHandStencil(overlayCtx, overlayCanvas.width, overlayCanvas.height);
+            }
+            lastRenderedState = "searching";
           }
         } else {
+          if (overlayCtx && overlayCanvas) {
+            overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+          }
           drawSimulatedFrame();
+          lastRenderedState = "simulating";
         }
       }
 

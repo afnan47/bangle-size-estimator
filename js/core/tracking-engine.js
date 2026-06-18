@@ -54,14 +54,14 @@
       }
 
       // Pre-compute 3D spatial positions and hand tilt pitch early for HUD gauges
-      const p0_raw = unproject({ x: u0, y: v0 }, depth0, activeProjectionMatrix);
-      const p5_raw = unproject({ x: u5, y: v5 }, depth5, activeProjectionMatrix);
-      const p17_raw = unproject({ x: u17, y: v17 }, depth17, activeProjectionMatrix);
+      const p0_raw = unproject({ x: u0, y: v0 }, depth0, activeProjectionMatrix, temp_p0_raw);
+      const p5_raw = unproject({ x: u5, y: v5 }, depth5, activeProjectionMatrix, temp_p5_raw);
+      const p17_raw = unproject({ x: u17, y: v17 }, depth17, activeProjectionMatrix, temp_p17_raw);
 
-      const v1 = subtractVectors(p5_raw, p0_raw);
-      const v2 = subtractVectors(p17_raw, p0_raw);
-      const palmNormal = crossProduct(v1, v2);
-      const unitNormal = normalizeVector(palmNormal);
+      const v1 = subtractVectors(p5_raw, p0_raw, temp_v1);
+      const v2 = subtractVectors(p17_raw, p0_raw, temp_v2);
+      const palmNormal = crossProduct(v1, v2, temp_palmNormal);
+      const unitNormal = normalizeVector(palmNormal, temp_unitNormal);
       const palmPitchRad = Math.acos(Math.min(1.0, Math.abs(unitNormal[2])));
       const palmPitchDeg = (palmPitchRad * 180) / Math.PI;
 
@@ -103,8 +103,16 @@
       }
 
       // Apply One-Euro filter smoothing on 3D landmarks for jitter reduction
-      const p5_3d = isUpgradedSizerMode ? filterP5.filter(p5_raw) : p5_raw;
-      const p17_3d = isUpgradedSizerMode ? filterP17.filter(p17_raw) : p17_raw;
+      let p5_3d, p17_3d;
+      if (isUpgradedSizerMode) {
+        p5_3d = filterP5.filter(p5_raw, undefined, temp_p5_3d);
+        p17_3d = filterP17.filter(p17_raw, undefined, temp_p17_3d);
+      } else {
+        temp_p5_3d[0] = p5_raw[0]; temp_p5_3d[1] = p5_raw[1]; temp_p5_3d[2] = p5_raw[2];
+        temp_p17_3d[0] = p17_raw[0]; temp_p17_3d[1] = p17_raw[1]; temp_p17_3d[2] = p17_raw[2];
+        p5_3d = temp_p5_3d;
+        p17_3d = temp_p17_3d;
+      }
       const p0_3d = p0_raw;
 
       // Compute physical distance in mm
@@ -132,7 +140,21 @@
       // Safeguard 5: Check stability (variance < 1.5mm allows normal camera noise and hand micro-shakes)
       if (variance < 1.5) {
         stableMeasurementCount++;
-        lastValidHandPositions = { p5: p5_3d, p17: p17_3d, wrist: p0_3d };
+        
+        // Copy to preallocatedLastValidHandPositions to avoid dynamic references
+        preallocatedLastValidHandPositions.p5[0] = p5_3d[0];
+        preallocatedLastValidHandPositions.p5[1] = p5_3d[1];
+        preallocatedLastValidHandPositions.p5[2] = p5_3d[2];
+        
+        preallocatedLastValidHandPositions.p17[0] = p17_3d[0];
+        preallocatedLastValidHandPositions.p17[1] = p17_3d[1];
+        preallocatedLastValidHandPositions.p17[2] = p17_3d[2];
+        
+        preallocatedLastValidHandPositions.wrist[0] = p0_3d[0];
+        preallocatedLastValidHandPositions.wrist[1] = p0_3d[1];
+        preallocatedLastValidHandPositions.wrist[2] = p0_3d[2];
+        
+        lastValidHandPositions = preallocatedLastValidHandPositions;
         
         drawHandWireframe(landmarks, true, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
         drawProjectedBangleOverlay(p5_3d, p17_3d, smoothedKnuckleWidth, p0_3d);
