@@ -113,6 +113,9 @@
           let upLockedWidth = null;
           let upLockFrame = null;
           let upWidths = [];
+          let upMeasurementHistory = [];
+          let upPrevWristPos = null;
+          let upUnstableFrameCount = 0;
 
           for (let f = 0; f < maxFrames; f++) {
             const frameData = generateSimulatedHand(gtWidth, gtPitch, gtDepth, jitter, drift, f + trial * 1000);
@@ -165,6 +168,9 @@
               const d0 = lm0.z;
               let isValid = false;
               let width = null;
+              let p0_3d = null;
+              let p5_3d = null;
+              let p17_3d = null;
 
               if (d5 > 0.15 && d5 <= 1.0 && d17 > 0.15 && d17 <= 1.0) {
                 const p0_raw = unproject(lm0, d0, activeProjectionMatrix || [1.29, 0, 0, 0, 0, 1.73, 0, 0, 0, 0, -1, -1, 0, 0, -0.2, 0]);
@@ -179,8 +185,9 @@
                 const pitchDeg = (pitchRad * 180) / Math.PI;
 
                 if (pitchDeg <= 15) {
-                  const p5_3d = upFilterP5.filter(p5_raw);
-                  const p17_3d = upFilterP17.filter(p17_raw);
+                  p5_3d = upFilterP5.filter(p5_raw);
+                  p17_3d = upFilterP17.filter(p17_raw);
+                  p0_3d = p0_raw;
                   const rawMM = calculateDistance(p5_3d, p17_3d) * 1000;
                   if (rawMM >= 42 && rawMM <= 88) {
                     width = rawMM * calibrationScale;
@@ -190,22 +197,65 @@
               }
 
               if (isValid) {
-                const smoothed = upKalman.update(width);
-                const variance = Math.abs(width - smoothed);
-                if (variance < 1.5) {
-                  upStableCount++;
-                  upWidths.push(smoothed);
-                  if (upStableCount >= requiredStable) {
-                    upLockedWidth = smoothed;
-                    upLockFrame = f;
+                // 1. Wrist velocity gating (macro-movement check)
+                let isMacroMovement = false;
+                if (upPrevWristPos) {
+                  const movementDist = calculateDistance(p0_3d, upPrevWristPos);
+                  if (movementDist > 0.02) {
+                    isMacroMovement = true;
                   }
+                }
+                upPrevWristPos = [p0_3d[0], p0_3d[1], p0_3d[2]];
+
+                if (isMacroMovement) {
+                  upStableCount = Math.max(0, upStableCount - 5);
+                  upUnstableFrameCount = 0;
+                  upMeasurementHistory = [];
                 } else {
-                  upStableCount = Math.max(0, upStableCount - 3);
+                  // 2. Sliding window buffer
+                  upMeasurementHistory.push(width);
+                  if (upMeasurementHistory.length > 60) {
+                    upMeasurementHistory.shift();
+                  }
+
+                  // 3. Trimmed Mean / Standard deviation based filtering
+                  const smoothed = getTrimmedMean(upMeasurementHistory, 0.2);
+                  const stdDev = getStandardDeviation(upMeasurementHistory);
+
+                  const isHistoryReady = upMeasurementHistory.length >= 15;
+
+                  if (isHistoryReady && stdDev < 1.5) {
+                    // Stable frame
+                    upStableCount++;
+                    upUnstableFrameCount = 0;
+                    upWidths.push(smoothed);
+                    if (upStableCount >= requiredStable) {
+                      upLockedWidth = smoothed;
+                      upLockFrame = f;
+                    }
+                  } else if (isHistoryReady && stdDev < 2.5) {
+                    // Shivering/Tremor detected (micro-movement)
+                    upUnstableFrameCount++;
+                    if (upUnstableFrameCount >= 15) {
+                      upStableCount = Math.max(0, upStableCount - 1);
+                    }
+                    upWidths.push(smoothed);
+                    
+                    if (upStableCount >= requiredStable) {
+                      upLockedWidth = smoothed;
+                      upLockFrame = f;
+                    }
+                  } else {
+                    // High instability
+                    upStableCount = Math.max(0, upStableCount - 2);
+                    upUnstableFrameCount = 0;
+                  }
                 }
               } else {
                 upStableCount = Math.max(0, upStableCount - 1);
               }
             }
+
           }
 
           if (baseLockedWidth) {

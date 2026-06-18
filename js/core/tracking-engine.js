@@ -129,64 +129,198 @@
       // Apply calibration scale factor from local storage
       const calibratedWidth = rawWidthMM * calibrationScale;
 
-      // Apply Kalman filter smoothing
-      smoothedKnuckleWidth = kalmanFilter.update(calibratedWidth);
-      
-      // Store uncalibrated smoothed width for calculation in size correction feedback
-      lastUncalibratedSmoothedWidth = smoothedKnuckleWidth / calibrationScale;
-      
-      const variance = Math.abs(calibratedWidth - smoothedKnuckleWidth);
+      if (isUpgradedSizerMode) {
+        // 1. Wrist velocity gating (macro-movement check)
+        let isMacroMovement = false;
+        if (prevWristPos) {
+          const movementDist = calculateDistance(p0_3d, prevWristPos);
+          // 2 cm threshold in a single frame indicates phone/hand is actively moving
+          if (movementDist > 0.02) {
+            isMacroMovement = true;
+          }
+        }
+        // Update previous wrist position
+        prevWristPos = [p0_3d[0], p0_3d[1], p0_3d[2]];
 
-      // Safeguard 5: Check stability (variance < 1.5mm allows normal camera noise and hand micro-shakes)
-      if (variance < 1.5) {
-        stableMeasurementCount++;
+        if (isMacroMovement) {
+          stableMeasurementCount = Math.max(0, stableMeasurementCount - 5); // decay faster on macro movement
+          unstableFrameCount = 0;
+          measurementHistory = []; // Reset history for a fresh start after movement
+          
+          drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
+          updateHUD(
+            "Unstable", 
+            `${(calibratedWidth / 10).toFixed(2)} cm`, 
+            getProgressPct(), 
+            "⚠️ Movement detected. Hold hand completely still!", 
+            true,
+            palmPitchDeg,
+            depth5
+          );
+          return;
+        }
+
+        // 2. Sliding window buffer
+        measurementHistory.push(calibratedWidth);
+        if (measurementHistory.length > MAX_HISTORY_LENGTH) {
+          measurementHistory.shift();
+        }
+
+        // 3. Trimmed Mean / Standard deviation based filtering
+        smoothedKnuckleWidth = getTrimmedMean(measurementHistory, 0.2); // 20% trim
+        lastUncalibratedSmoothedWidth = smoothedKnuckleWidth / calibrationScale;
+
+        const stdDev = getStandardDeviation(measurementHistory);
+
+        // Safeguard 5: Check stability
+        // We require at least 15 samples to begin trusting the sliding window stdDev
+        const isHistoryReady = measurementHistory.length >= 15;
         
-        // Copy to preallocatedLastValidHandPositions to avoid dynamic references
-        preallocatedLastValidHandPositions.p5[0] = p5_3d[0];
-        preallocatedLastValidHandPositions.p5[1] = p5_3d[1];
-        preallocatedLastValidHandPositions.p5[2] = p5_3d[2];
-        
-        preallocatedLastValidHandPositions.p17[0] = p17_3d[0];
-        preallocatedLastValidHandPositions.p17[1] = p17_3d[1];
-        preallocatedLastValidHandPositions.p17[2] = p17_3d[2];
-        
-        preallocatedLastValidHandPositions.wrist[0] = p0_3d[0];
-        preallocatedLastValidHandPositions.wrist[1] = p0_3d[1];
-        preallocatedLastValidHandPositions.wrist[2] = p0_3d[2];
-        
-        lastValidHandPositions = preallocatedLastValidHandPositions;
-        
-        drawHandWireframe(landmarks, true, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
-        drawProjectedBangleOverlay(p5_3d, p17_3d, smoothedKnuckleWidth, p0_3d);
-        
-        updateHUD(
-          "Calibrating", 
-          `${(smoothedKnuckleWidth / 10).toFixed(2)} cm`, 
-          getProgressPct(), 
-          "Hold perfectly still. Calibrating...",
-          false,
-          palmPitchDeg,
-          depth5
-        );
-        
-        if (stableMeasurementCount >= REQUIRED_STABLE_FRAMES) {
-          lockCalibration(smoothedKnuckleWidth);
+        if (isHistoryReady && stdDev < 1.5) {
+          // Stable frame
+          stableMeasurementCount++;
+          unstableFrameCount = 0;
+
+          // Save valid hand positions
+          preallocatedLastValidHandPositions.p5[0] = p5_3d[0];
+          preallocatedLastValidHandPositions.p5[1] = p5_3d[1];
+          preallocatedLastValidHandPositions.p5[2] = p5_3d[2];
+          
+          preallocatedLastValidHandPositions.p17[0] = p17_3d[0];
+          preallocatedLastValidHandPositions.p17[1] = p17_3d[1];
+          preallocatedLastValidHandPositions.p17[2] = p17_3d[2];
+          
+          preallocatedLastValidHandPositions.wrist[0] = p0_3d[0];
+          preallocatedLastValidHandPositions.wrist[1] = p0_3d[1];
+          preallocatedLastValidHandPositions.wrist[2] = p0_3d[2];
+          
+          lastValidHandPositions = preallocatedLastValidHandPositions;
+
+          drawHandWireframe(landmarks, true, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
+          drawProjectedBangleOverlay(p5_3d, p17_3d, smoothedKnuckleWidth, p0_3d);
+
+          updateHUD(
+            "Calibrating", 
+            `${(smoothedKnuckleWidth / 10).toFixed(2)} cm`, 
+            getProgressPct(), 
+            "Hold perfectly still. Calibrating...",
+            false,
+            palmPitchDeg,
+            depth5
+          );
+
+          if (stableMeasurementCount >= REQUIRED_STABLE_FRAMES) {
+            lockCalibration(smoothedKnuckleWidth);
+          }
+        } else if (isHistoryReady && stdDev < 2.5) {
+          // Shivering/Tremor detected (micro-movement: stdDev is elevated but below 2.5mm, velocity is low)
+          unstableFrameCount++;
+          
+          // Draw using robust smoothed values
+          drawHandWireframe(landmarks, true, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
+          drawProjectedBangleOverlay(p5_3d, p17_3d, smoothedKnuckleWidth, p0_3d);
+
+          // If shivering persists for more than 15 consecutive frames, decay progress slowly
+          if (unstableFrameCount >= 15) {
+            stableMeasurementCount = Math.max(0, stableMeasurementCount - 1);
+          }
+
+          updateHUD(
+            "Calibrating", 
+            `${(smoothedKnuckleWidth / 10).toFixed(2)} cm`, 
+            getProgressPct(), 
+            "⚠️ Minor shaking detected. Hold as still as possible.",
+            false,
+            palmPitchDeg,
+            depth5
+          );
+
+          if (stableMeasurementCount >= REQUIRED_STABLE_FRAMES) {
+            lockCalibration(smoothedKnuckleWidth);
+          }
+        } else {
+          // High instability (stdDev >= 2.5mm or history not ready)
+          stableMeasurementCount = Math.max(0, stableMeasurementCount - 2);
+          unstableFrameCount = 0;
+          lastValidHandPositions = null;
+
+          drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
+          
+          const instructionMsg = !isHistoryReady 
+            ? "Hold hand still to start calibration..." 
+            : "⚠️ Movement detected. Hold hand completely still!";
+            
+          updateHUD(
+            "Unstable", 
+            `${(calibratedWidth / 10).toFixed(2)} cm`, 
+            getProgressPct(), 
+            instructionMsg, 
+            true,
+            palmPitchDeg,
+            depth5
+          );
         }
       } else {
-        stableMeasurementCount = Math.max(0, stableMeasurementCount - 3);
-        lastValidHandPositions = null;
-        
-        drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
-        updateHUD(
-          "Unstable", 
-          `${(calibratedWidth / 10).toFixed(2)} cm`, 
-          getProgressPct(), 
-          "⚠️ Movement detected. Hold hand completely still!", 
-          true,
-          palmPitchDeg,
-          depth5
-        );
+        // BASELINE PIPELINE
+        // Reset upgraded state variables to ensure fresh start if toggling back
+        measurementHistory = [];
+        prevWristPos = null;
+        unstableFrameCount = 0;
+
+        smoothedKnuckleWidth = kalmanFilter.update(calibratedWidth);
+        lastUncalibratedSmoothedWidth = smoothedKnuckleWidth / calibrationScale;
+        const variance = Math.abs(calibratedWidth - smoothedKnuckleWidth);
+
+        if (variance < 1.5) {
+          stableMeasurementCount++;
+          
+          preallocatedLastValidHandPositions.p5[0] = p5_3d[0];
+          preallocatedLastValidHandPositions.p5[1] = p5_3d[1];
+          preallocatedLastValidHandPositions.p5[2] = p5_3d[2];
+          
+          preallocatedLastValidHandPositions.p17[0] = p17_3d[0];
+          preallocatedLastValidHandPositions.p17[1] = p17_3d[1];
+          preallocatedLastValidHandPositions.p17[2] = p17_3d[2];
+          
+          preallocatedLastValidHandPositions.wrist[0] = p0_3d[0];
+          preallocatedLastValidHandPositions.wrist[1] = p0_3d[1];
+          preallocatedLastValidHandPositions.wrist[2] = p0_3d[2];
+          
+          lastValidHandPositions = preallocatedLastValidHandPositions;
+          
+          drawHandWireframe(landmarks, true, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
+          drawProjectedBangleOverlay(p5_3d, p17_3d, smoothedKnuckleWidth, p0_3d);
+          
+          updateHUD(
+            "Calibrating", 
+            `${(smoothedKnuckleWidth / 10).toFixed(2)} cm`, 
+            getProgressPct(), 
+            "Hold perfectly still. Calibrating...",
+            false,
+            palmPitchDeg,
+            depth5
+          );
+          
+          if (stableMeasurementCount >= REQUIRED_STABLE_FRAMES) {
+            lockCalibration(smoothedKnuckleWidth);
+          }
+        } else {
+          stableMeasurementCount = Math.max(0, stableMeasurementCount - 3);
+          lastValidHandPositions = null;
+          
+          drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
+          updateHUD(
+            "Unstable", 
+            `${(calibratedWidth / 10).toFixed(2)} cm`, 
+            getProgressPct(), 
+            "⚠️ Movement detected. Hold hand completely still!", 
+            true,
+            palmPitchDeg,
+            depth5
+          );
+        }
       }
+
     }
 
     function lockCalibration(finalKnuckleWidth) {

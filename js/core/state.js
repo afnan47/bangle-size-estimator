@@ -57,6 +57,9 @@
     let isWebcamDemo = false;
     let webcamStream = null;
     let lastValidHandPositions = null; // References preallocatedLastValidHandPositions when valid
+    let measurementHistory = []; // Buffer of recent knuckle width measurements
+    let prevWristPos = null; // [x, y, z] of wrist from previous frame
+    const MAX_HISTORY_LENGTH = 60; // 2 seconds of history at 30fps
 
     // One-Euro Filters for knuckle landmarks 5 & 17
     const filterP5 = new OneEuroFilter3D(30, 1.0, 0.0005, 1.0);

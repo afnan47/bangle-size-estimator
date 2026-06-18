@@ -110,4 +110,26 @@
     }
 
     // ------------------------------------------------------------------------
+    // SLIDING WINDOW FILTERS (FOR SHIVER / TREMOR RESISTANCE)
+    // ------------------------------------------------------------------------
+    function getTrimmedMean(arr, trimPercentage = 0.2) {
+      if (arr.length === 0) return 0;
+      const sorted = [...arr].sort((a, b) => a - b);
+      const trimCount = Math.floor(sorted.length * trimPercentage);
+      // Ensure we don't trim everything away for small arrays
+      const trimmed = sorted.slice(trimCount, sorted.length - trimCount);
+      if (trimmed.length === 0) {
+        return sorted[Math.floor(sorted.length / 2)];
+      }
+      const sum = trimmed.reduce((acc, val) => acc + val, 0);
+      return sum / trimmed.length;
+    }
+
+    function getStandardDeviation(arr) {
+      if (arr.length <= 1) return 0;
+      const mean = arr.reduce((acc, val) => acc + val, 0) / arr.length;
+      const variance = arr.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (arr.length - 1);
+      return Math.sqrt(variance);
+    }
+
     

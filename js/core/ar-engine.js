@@ -214,6 +214,9 @@
       calibrationLocked = false;
       isProcessingHand = false;
       stableMeasurementCount = 0;
+      unstableFrameCount = 0;
+      measurementHistory = [];
+      prevWristPos = null;
       kalmanFilter.reset(60.0);
       lastValidHandPositions = null;
       lastRenderedState = null;
