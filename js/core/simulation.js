@@ -12,7 +12,7 @@
 
       // Hide onboarding, show AR container
       screenOnboarding.classList.add('hidden');
-      arContainer.style.display = 'block';
+      arContainer.classList.remove('hidden');
       resizeOverlayCanvas();
       recalibrate();
       

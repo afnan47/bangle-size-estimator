@@ -6,9 +6,10 @@
       checkReturningUser();
 
       // 2. Clean, declarative binding map for simple click triggers
+      // 2. Clean, declarative binding map for simple click triggers
       const standardClickBindings = [
         { id: 'btn-direct-scan', action: startAR },
-        { id: 'btn-quick-start-scan', action: startAR },
+        { id: 'btn-returning-start', action: startAR },
         { id: 'btn-exit-ar',     action: stopAR },
         { id: 'btn-recalibrate', action: recalibrate }
       ];
@@ -125,6 +126,7 @@
       document.getElementById('error-desc').textContent = desc;
       errorModal.classList.remove('hidden');
       screenOnboarding.classList.add('hidden');
+      setScanButtonsLoading(false);
     }
 
     function updateHUD(status, liveWidthText, progressPct, instruction, isWarning = false, pitchVal = null, depthVal = null) {
@@ -204,6 +206,26 @@
           distEl.style.color = 'var(--text-secondary)';
         }
       }
+    }
+
+    function setScanButtonsLoading(isLoading) {
+      const btns = [
+        document.getElementById('btn-direct-scan'),
+        document.getElementById('btn-returning-start'),
+        document.getElementById('link-skip-instructions')
+      ];
+      btns.forEach(btn => {
+        if (!btn) return;
+        if (isLoading) {
+          btn.classList.add('loading');
+          btn.style.pointerEvents = 'none';
+          if (btn.tagName === 'BUTTON') btn.disabled = true;
+        } else {
+          btn.classList.remove('loading');
+          btn.style.pointerEvents = '';
+          if (btn.tagName === 'BUTTON') btn.disabled = false;
+        }
+      });
     }
 
     // ------------------------------------------------------------------------

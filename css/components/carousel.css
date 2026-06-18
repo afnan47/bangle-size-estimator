@@ -15,7 +15,7 @@
 .carousel-track {
   display: flex;
   width: 300%; /* 3 slides */
-  transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: transform 0.6s var(--ease-ios);
 }
 .carousel-slide {
   width: 33.333%;
@@ -107,6 +107,35 @@
   box-shadow: 0 8px 24px rgba(212, 175, 55, 0.25);
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
   text-decoration: none;
+}
+
+/* Premium Button Loading states */
+.btn.loading {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+}
+
+.btn.loading::after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  top: calc(50% - 10px);
+  left: calc(50% - 10px);
+  border: 3px solid rgba(12, 2, 5, 0.2);
+  border-top-color: #0c0205;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.btn.loading svg {
+  opacity: 0 !important;
+}
+
+.btn-secondary.loading::after {
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: var(--accent-gold);
 }
 
 .btn:hover {

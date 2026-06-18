@@ -1,6 +1,7 @@
 // WEBXR & GL RUNTIME INITIALIZATION
     // ------------------------------------------------------------------------
     async function startAR() {
+      setScanButtonsLoading(true);
       let supported = false;
       if (navigator.xr) {
         try {
@@ -64,9 +65,10 @@
 
         // Toggle UI
         screenOnboarding.classList.add('hidden');
-        arContainer.style.display = 'block';
+        arContainer.classList.remove('hidden');
         resizeOverlayCanvas();
         recalibrate();
+        setScanButtonsLoading(false);
 
         // Start render frame loop
         console.log("Launching requestAnimationFrame frame loop...");
@@ -81,12 +83,14 @@
     }
 
     async function startWebcamDemo() {
+      setScanButtonsLoading(true);
       isWebcamDemo = true;
       console.log("Initializing PC Webcam Demo Mode...");
       
       const video = document.getElementById('webcam-video');
       if (!video) {
         showUIError("Demo Failed", "Webcam video element was not found.");
+        setScanButtonsLoading(false);
         return;
       }
 
@@ -111,9 +115,10 @@
 
         // Hide onboarding, show AR container with video playing behind
         screenOnboarding.classList.add('hidden');
-        arContainer.style.display = 'block';
+        arContainer.classList.remove('hidden');
         resizeOverlayCanvas();
         recalibrate();
+        setScanButtonsLoading(false);
         
         // Mock a projection matrix for the PC demo view
         activeProjectionMatrix = [1.29, 0, 0, 0, 0, 1.73, 0, 0, 0, 0, -1, -1, 0, 0, -0.2, 0];
@@ -130,6 +135,7 @@
 
       } catch (err) {
         console.error("Webcam access failed:", err);
+        setScanButtonsLoading(false);
         if (isLocalTest()) {
           console.warn("Falling back to camera-less simulation mode for local testing...");
           startNoCameraSimulation();
@@ -199,12 +205,12 @@
           video.srcObject = null;
           video.style.display = 'none';
         }
-        arContainer.style.display = 'none';
+        arContainer.classList.add('hidden');
         screenOnboarding.classList.remove('hidden');
       } else if (xrSession) {
         xrSession.end().then(() => {
           xrSession = null;
-          arContainer.style.display = 'none';
+          arContainer.classList.add('hidden');
           screenOnboarding.classList.remove('hidden');
         });
       }

@@ -11,13 +11,20 @@
   align-items: center;
   padding: 24px;
   z-index: 10;
-  transition: opacity 0.4s ease, transform 0.4s ease;
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1) translateY(0);
+  transition: opacity 0.5s var(--ease-ios),
+              transform 0.5s var(--ease-ios),
+              visibility 0.5s var(--ease-ios);
 }
 
 .screen.hidden {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(20px);
+  display: flex !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  transform: scale(0.96) translateY(12px) !important;
 }
 
 /* Onboarding / Start Screen */

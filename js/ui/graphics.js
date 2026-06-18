@@ -28,7 +28,73 @@
       return [u, v];
     }
 
+    function drawMediaPipeSkeleton(landmarks, isValid) {
+      if (!landmarks || landmarks.length !== 21 || !landmarks[1]) return;
+
+      const w = overlayCanvas.width;
+      const h = overlayCanvas.height;
+
+      const dotColor = isValid ? "rgba(212, 175, 55, 0.85)" : "rgba(217, 83, 79, 0.8)";
+      const lineColor = isValid ? "rgba(212, 175, 55, 0.35)" : "rgba(217, 83, 79, 0.3)";
+
+      const fingers = [
+        [0, 1, 2, 3, 4],       // Thumb
+        [5, 6, 7, 8],          // Index
+        [9, 10, 11, 12],       // Middle
+        [13, 14, 15, 16],      // Ring
+        [17, 18, 19, 20]       // Pinky
+      ];
+
+      overlayCtx.save();
+      overlayCtx.lineWidth = 2;
+      overlayCtx.strokeStyle = lineColor;
+      overlayCtx.fillStyle = dotColor;
+
+      fingers.forEach(chain => {
+        overlayCtx.beginPath();
+        for (let i = 0; i < chain.length; i++) {
+          const pt = landmarks[chain[i]];
+          if (!pt) continue;
+          const x = pt.x * w;
+          const y = pt.y * h;
+          if (i === 0) {
+            overlayCtx.moveTo(x, y);
+          } else {
+            overlayCtx.lineTo(x, y);
+          }
+        }
+        overlayCtx.stroke();
+      });
+
+      // Palm connector
+      const palmChain = [0, 5, 9, 13, 17, 0];
+      overlayCtx.beginPath();
+      palmChain.forEach((idx, i) => {
+        const pt = landmarks[idx];
+        if (!pt) return;
+        const x = pt.x * w;
+        const y = pt.y * h;
+        if (i === 0) overlayCtx.moveTo(x, y);
+        else overlayCtx.lineTo(x, y);
+      });
+      overlayCtx.stroke();
+
+      // Joints
+      for (let i = 0; i < 21; i++) {
+        const pt = landmarks[i];
+        if (!pt) continue;
+        overlayCtx.beginPath();
+        overlayCtx.arc(pt.x * w, pt.y * h, 3.5, 0, 2 * Math.PI);
+        overlayCtx.fill();
+      }
+
+      overlayCtx.restore();
+    }
+
     function drawHandWireframe(landmarks, isValid, progressFraction = 0) {
+      // Draw high-fidelity MediaPipe hand skeleton if available
+      drawMediaPipeSkeleton(landmarks, isValid);
+
       const w = overlayCanvas.width;
       const h = overlayCanvas.height;
 

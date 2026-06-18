@@ -6,6 +6,7 @@
       
       const instructionsCard = document.getElementById('instructions-carousel-card');
       const handoffCard = document.getElementById('desktop-handoff-card');
+      const returningUserCard = document.getElementById('returning-user-card');
       const qrImg = document.getElementById('handoff-qr-image');
 
       if (qrImg) {
@@ -14,20 +15,32 @@
         qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(currentUrl)}`;
       }
 
-      const quickStartBtn = document.getElementById('btn-quick-start-scan');
+      const isReturning = localStorage.getItem('bangle_sizer_returning') === 'true';
 
       if (isAndroid || (isMobile && window.location.search.includes('bypass=true')) || isLocalTest()) {
-        if (instructionsCard) {
-          instructionsCard.classList.remove('hidden');
-          instructionsCard.style.display = 'flex';
-        }
-        if (quickStartBtn) {
-          quickStartBtn.classList.remove('hidden');
-          quickStartBtn.style.display = 'block';
-        }
         if (handoffCard) {
           handoffCard.classList.add('hidden');
           handoffCard.style.display = 'none';
+        }
+        
+        if (isReturning) {
+          if (returningUserCard) {
+            returningUserCard.classList.remove('hidden');
+            returningUserCard.style.display = 'flex';
+          }
+          if (instructionsCard) {
+            instructionsCard.classList.add('hidden');
+            instructionsCard.style.display = 'none';
+          }
+        } else {
+          if (returningUserCard) {
+            returningUserCard.classList.add('hidden');
+            returningUserCard.style.display = 'none';
+          }
+          if (instructionsCard) {
+            instructionsCard.classList.remove('hidden');
+            instructionsCard.style.display = 'flex';
+          }
         }
       } else {
         if (handoffCard) {
@@ -38,9 +51,9 @@
           instructionsCard.classList.add('hidden');
           instructionsCard.style.display = 'none';
         }
-        if (quickStartBtn) {
-          quickStartBtn.classList.add('hidden');
-          quickStartBtn.style.display = 'none';
+        if (returningUserCard) {
+          returningUserCard.classList.add('hidden');
+          returningUserCard.style.display = 'none';
         }
       }
     }
@@ -140,7 +153,6 @@
         e.preventDefault();
         const instructionsCard = document.getElementById('instructions-carousel-card');
         const handoffCard = document.getElementById('desktop-handoff-card');
-        const quickStartBtn = document.getElementById('btn-quick-start-scan');
         if (handoffCard) {
           handoffCard.classList.add('hidden');
           handoffCard.style.display = 'none';
@@ -149,9 +161,28 @@
           instructionsCard.classList.remove('hidden');
           instructionsCard.style.display = 'flex';
         }
-        if (quickStartBtn) {
-          quickStartBtn.classList.remove('hidden');
-          quickStartBtn.style.display = 'block';
+      });
+
+      // Show tutorial from returning user card
+      document.getElementById('btn-show-tutorial')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        const instructionsCard = document.getElementById('instructions-carousel-card');
+        const returningUserCard = document.getElementById('returning-user-card');
+        if (returningUserCard) {
+          returningUserCard.classList.add('hidden');
+          returningUserCard.style.display = 'none';
+        }
+        if (instructionsCard) {
+          instructionsCard.classList.remove('hidden');
+          instructionsCard.style.display = 'flex';
+        }
+      });
+
+      // Skip instructions & scan directly
+      document.getElementById('link-skip-instructions')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (typeof startAR === 'function') {
+          startAR();
         }
       });
 

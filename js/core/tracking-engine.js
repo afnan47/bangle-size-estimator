@@ -330,6 +330,9 @@
       // Recommend Bangle size
       const recommendation = getRecommendedBangleSize(finalKnuckleWidth);
       
+      // Save returning user flag
+      localStorage.setItem('bangle_sizer_returning', 'true');
+      
       // Show results card modal
       setTimeout(() => {
         selectBangleSize(recommendation.size);
