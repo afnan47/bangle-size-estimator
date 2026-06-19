@@ -287,8 +287,8 @@
       const tiltEl = document.getElementById('hud-tilt-gauge');
       if (tiltEl) {
         if (pitchVal !== null && pitchVal !== undefined) {
-          tiltEl.textContent = `Tilt: ${Math.round(pitchVal)}° / 15° Max`;
-          if (pitchVal > 15) {
+          tiltEl.textContent = `Tilt: ${Math.round(pitchVal)}° / 25° Max`;
+          if (pitchVal > 25) {
             tiltEl.style.color = 'var(--state-warning)';
           } else {
             tiltEl.style.color = 'var(--accent-gold)';

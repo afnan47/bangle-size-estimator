@@ -78,8 +78,8 @@
         return;
       }
 
-      // Safeguard 3: Check if hand is tilted
-      const isTilted = isUpgradedSizerMode ? (palmPitchDeg > 15) : (Math.abs(depth5 - depth17) > 0.08);
+      // Safeguard 3: Check if hand is tilted (Max tilt relaxed to 25° for more forgiving measurement)
+      const isTilted = isUpgradedSizerMode ? (palmPitchDeg > 25) : (Math.abs(depth5 - depth17) > 0.08);
       if (isTilted) {
         stableMeasurementCount = Math.max(0, stableMeasurementCount - 1);
         drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
@@ -88,7 +88,7 @@
           "-.- cm", 
           getProgressPct(), 
           isUpgradedSizerMode 
-            ? `⚠️ Keep hand flat. Hand tilted: ${palmPitchDeg.toFixed(0)}° (Max 15°)`
+            ? `⚠️ Keep hand flat. Hand tilted: ${palmPitchDeg.toFixed(0)}° (Max 25°)`
             : "⚠️ Keep hand flat. Do not tilt your hand.", 
           true,
           palmPitchDeg,
@@ -138,9 +138,9 @@
         prevWristPos = [p0_3d[0], p0_3d[1], p0_3d[2]];
 
         if (isMacroMovement) {
-          stableMeasurementCount = Math.max(0, stableMeasurementCount - 5); // decay faster on macro movement
+          stableMeasurementCount = Math.max(0, stableMeasurementCount - 2); // decay slower on macro movement (forgiving)
           unstableFrameCount = 0;
-          measurementHistory = []; // Reset history for a fresh start after movement
+          // measurementHistory = []; // Do not reset history completely so we don't start from scratch building samples
           
           drawHandWireframe(landmarks, false, stableMeasurementCount / REQUIRED_STABLE_FRAMES);
           updateHUD(
@@ -171,7 +171,7 @@
         // We require at least 15 samples to begin trusting the sliding window stdDev
         const isHistoryReady = measurementHistory.length >= 15;
         
-        if (isHistoryReady && stdDev < 1.54) { // (Optimized via simulation)
+        if (isHistoryReady && stdDev < 2.2) { // Relaxed stdDev from 1.54 to 2.2 (forgiving tracking)
           // Stable frame
           stableMeasurementCount++;
           unstableFrameCount = 0;
@@ -210,7 +210,7 @@
           if (stableMeasurementCount >= REQUIRED_STABLE_FRAMES) {
             lockCalibration(smoothedKnuckleWidth);
           }
-        } else if (isHistoryReady && stdDev < 2.54) { // (Optimized via simulation)
+        } else if (isHistoryReady && stdDev < 3.2) { // Relaxed stdDev from 2.54 to 3.2 (forgiving tracking)
           // Shivering/Tremor detected (micro-movement: stdDev is elevated but below 2.5mm, velocity is low)
           unstableFrameCount++;
           
@@ -269,7 +269,7 @@
         lastUncalibratedSmoothedWidth = smoothedKnuckleWidth / calibrationScale;
         const variance = Math.abs(calibratedWidth - smoothedKnuckleWidth);
 
-        if (variance < 1.5) {
+        if (variance < 2.2) { // Relaxed baseline variance threshold from 1.5 to 2.2
           stableMeasurementCount++;
           
           preallocatedLastValidHandPositions.p5[0] = p5_3d[0];

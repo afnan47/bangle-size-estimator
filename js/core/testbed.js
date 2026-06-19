@@ -86,7 +86,7 @@
       setTimeout(() => {
         const numTrials = 10;
         const maxFrames = 300;
-        const requiredStable = 40; // (Optimized via simulation)
+        const requiredStable = 20; // Relaxed for easier measurement
 
         let baselineLocks = 0;
         let baselineLockSum = 0;
@@ -146,7 +146,7 @@
               if (isValid) {
                 const smoothed = baseKalman.update(width);
                 const variance = Math.abs(width - smoothed);
-                if (variance < 1.5) {
+                if (variance < 2.2) { // Relaxed baseline variance threshold from 1.5 to 2.2
                   baseStableCount++;
                   baseWidths.push(smoothed);
                   if (baseStableCount >= requiredStable) {
@@ -184,7 +184,7 @@
                 const pitchRad = Math.acos(Math.min(1.0, Math.abs(unitNormal[2])));
                 const pitchDeg = (pitchRad * 180) / Math.PI;
 
-                if (pitchDeg <= 15) {
+                if (pitchDeg <= 25) { // Max tilt relaxed to 25° for more forgiving measurement
                   p5_3d = upFilterP5.filter(p5_raw);
                   p17_3d = upFilterP17.filter(p17_raw);
                   p0_3d = p0_raw;
@@ -208,9 +208,9 @@
                 upPrevWristPos = [p0_3d[0], p0_3d[1], p0_3d[2]];
 
                 if (isMacroMovement) {
-                  upStableCount = Math.max(0, upStableCount - 5);
+                  upStableCount = Math.max(0, upStableCount - 2); // decay slower on macro movement (forgiving)
                   upUnstableFrameCount = 0;
-                  upMeasurementHistory = [];
+                  // upMeasurementHistory = []; // Do not reset history completely
                 } else {
                   // 2. Sliding window buffer
                   upMeasurementHistory.push(width);
@@ -224,7 +224,7 @@
 
                   const isHistoryReady = upMeasurementHistory.length >= 15;
 
-                  if (isHistoryReady && stdDev < 1.54) { // (Optimized via simulation)
+                  if (isHistoryReady && stdDev < 2.2) { // Relaxed stdDev from 1.54 to 2.2 (forgiving tracking)
                     // Stable frame
                     upStableCount++;
                     upUnstableFrameCount = 0;
@@ -233,7 +233,7 @@
                       upLockedWidth = smoothed;
                       upLockFrame = f;
                     }
-                  } else if (isHistoryReady && stdDev < 2.54) { // (Optimized via simulation)
+                  } else if (isHistoryReady && stdDev < 3.2) { // Relaxed stdDev from 2.54 to 3.2 (forgiving tracking)
                     // Shivering/Tremor detected (micro-movement)
                     upUnstableFrameCount++;
                     if (upUnstableFrameCount >= 15) {

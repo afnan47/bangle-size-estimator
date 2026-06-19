@@ -20,7 +20,7 @@ The tool guides users through onboarding and calibrates a high-precision measure
 *   **Signal Filtering & Tremor Resistance:**
     *   **3D One-Euro Filter:** Applied to key knuckles to damp high-frequency hand tremors while maintaining low latency.
     *   **Coplanar Normal Rotation:** Reconstructs the 3D plane of the palm to correct perspective projection errors.
-    *   **Pitch & Distance Safeguards:** Restricts measurements when the hand is tilted beyond 15° or held at incorrect distances (ideal range: 15 cm to 1.0 m) with live HUD gauge indicators.
+    *   **Pitch & Distance Safeguards:** Restricts measurements when the hand is tilted beyond 25° or held at incorrect distances (ideal range: 15 cm to 1.0 m) with live HUD gauge indicators.
 *   **Interactive Simulation Testbed & Automated Benchmark:**
     *   Built-in UI panel to simulate hand metrics, pitch, depth, and noise (Gaussian jitter, distance drift).
     *   Live Landmark Feed: Feeds noisy simulated coordinate structures directly into the live WebGL/Canvas overlay.
@@ -102,10 +102,10 @@ The core tracking module maps the knuckle width (index base to pinky base joint 
     $$\vec{v}_1 = p_5 - p_0, \quad \vec{v}_2 = p_{17} - p_0$$
     $$\vec{n} = \vec{v}_1 \times \vec{v}_2, \quad \hat{n} = \frac{\vec{n}}{\|\vec{n}\|}$$
     $$\theta_{\text{pitch}} = \arccos(|\hat{n}_z|)$$
-    If $\theta_{\text{pitch}} > 15^\circ$, the pipeline flags **Unstable (Tilted)** and pauses calibration to prevent foreshortening underestimation.
+    If $\theta_{\text{pitch}} > 25^\circ$, the pipeline flags **Unstable (Tilted)** and pauses calibration to prevent foreshortening underestimation.
 5.  **3D Jitter Reduction:** Passes coordinates through a `OneEuroFilter3D` with dynamic cutoff adjustment (optimized parameters via simulation: $f_{\text{min}} = 0.96$, $\beta = 0.00106$, $d_{\text{cutoff}} = 1.385$):
     $$\alpha = \frac{1}{1 + \frac{\tau}{\Delta t}}, \quad f_{\text{cutoff}} = f_{\text{min}} + \beta \cdot |dx|$$
-6.  **Sizing Confirmation:** Buffers the last 60 frames (2 seconds at 30fps) in a sliding window. It takes an optimized **28% trimmed mean** (updated from 20%) to eliminate tremor outliers. Once the sliding-window standard deviation $\sigma < 1.54\text{ mm}$ (or $0.154\text{ cm}$, updated from $1.5\text{ mm}$) over **40 consecutive frames** (approx. 1.33 seconds, optimized from 45 frames), the measurement locks.
+6.  **Sizing Confirmation:** Buffers the last 60 frames (2 seconds at 30fps) in a sliding window. It takes an optimized **28% trimmed mean** (updated from 20%) to eliminate tremor outliers. Once the sliding-window standard deviation $\sigma < 2.2\text{ mm}$ (or $0.22\text{ cm}$) over **20 consecutive frames** (approx. 0.67 seconds), the measurement locks.
 
 ---
 

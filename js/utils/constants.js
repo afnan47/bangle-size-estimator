@@ -1,6 +1,6 @@
 // CONSTANTS & CONFIGURATION
     // ------------------------------------------------------------------------
-    const REQUIRED_STABLE_FRAMES = 40; // ~1.33s of steady tracking at 30fps (Optimized via simulation)
+    const REQUIRED_STABLE_FRAMES = 20; // ~0.67s of steady tracking at 30fps (Relaxed for easier measurement)
     
     // Standard bangle sizes mapping (Inner diameter in MM)
     const BANGLE_SIZES = [
