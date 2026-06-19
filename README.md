@@ -14,6 +14,8 @@ The tool guides users through onboarding and calibrates a high-precision measure
 *   **Onboarding & UI Experience:**
     *   Luxurious theme styled in deep burgundy (`#0a0104`), gold accents (`#d4af37`), and premium typography (Cormorant Garamond & Montserrat).
     *   Interactive step-by-step instructions carousel with custom inline-SVG vector illustrations showing proper hand squeezing, positioning, and camera alignment.
+    *   **Touch Swipe & Mobile Layout Optimizations:** Added full touch swipe navigation support for the onboarding instructions carousel, alongside compact, responsive CSS adjustments to prevent vertical overflow and clipping on shorter viewports (< 840px height) and narrow mobile screens.
+    *   **Expandable Boutique & Developer Easter Egg:** Features a premium expandable boutique info drawer with collapsible details and a direct Google Maps integration. Triple-tapping the boutique logo triggers a progressive haptic vibration sequence and unlocks a hidden link directly to this repository.
     *   Dynamic QR code mobile handoff card for desktop visitors to seamlessly scan and open on mobile browsers.
 *   **Signal Filtering & Tremor Resistance:**
     *   **3D One-Euro Filter:** Applied to key knuckles to damp high-frequency hand tremors while maintaining low latency.
@@ -36,6 +38,7 @@ bangle-size-estimator/
 ├── .env                       # Environment configurations for Supabase write keys
 ├── .gitignore                 # Standard exclusions (.env, .vercel, etc.)
 ├── index.html                 # App layout, onboarding screens, HUDs, and overlays
+├── optimized_parameters.json  # Simulation results showing default vs optimized parameters
 ├── privacy.html               # Customer data privacy guidelines
 ├── terms.html                 # Terms of service page
 ├── api/
@@ -100,9 +103,9 @@ The core tracking module maps the knuckle width (index base to pinky base joint 
     $$\vec{n} = \vec{v}_1 \times \vec{v}_2, \quad \hat{n} = \frac{\vec{n}}{\|\vec{n}\|}$$
     $$\theta_{\text{pitch}} = \arccos(|\hat{n}_z|)$$
     If $\theta_{\text{pitch}} > 15^\circ$, the pipeline flags **Unstable (Tilted)** and pauses calibration to prevent foreshortening underestimation.
-5.  **3D Jitter Reduction:** Passes coordinates through a `OneEuroFilter3D` with dynamic cutoff adjustment:
+5.  **3D Jitter Reduction:** Passes coordinates through a `OneEuroFilter3D` with dynamic cutoff adjustment (optimized parameters via simulation: $f_{\text{min}} = 0.96$, $\beta = 0.00106$, $d_{\text{cutoff}} = 1.385$):
     $$\alpha = \frac{1}{1 + \frac{\tau}{\Delta t}}, \quad f_{\text{cutoff}} = f_{\text{min}} + \beta \cdot |dx|$$
-6.  **Sizing Confirmation:** Buffers the last 60 frames (2 seconds at 30fps) in a sliding window. It takes a **20% trimmed mean** to eliminate tremor outliers. Once standard deviation $\sigma < 0.12$ over 45 consecutive frames, the measurement locks.
+6.  **Sizing Confirmation:** Buffers the last 60 frames (2 seconds at 30fps) in a sliding window. It takes an optimized **28% trimmed mean** (updated from 20%) to eliminate tremor outliers. Once the sliding-window standard deviation $\sigma < 1.54\text{ mm}$ (or $0.154\text{ cm}$, updated from $1.5\text{ mm}$) over **40 consecutive frames** (approx. 1.33 seconds, optimized from 45 frames), the measurement locks.
 
 ---
 
