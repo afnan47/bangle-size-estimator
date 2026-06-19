@@ -188,4 +188,41 @@
   filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.45));
 }
 
+/* Compact layout for mobile and short viewports to prevent overflow */
+@media (max-height: 840px), (max-width: 480px) {
+  .carousel-card {
+    padding: 20px 16px 16px 16px;
+  }
+  .slide-illustration {
+    width: 96px;
+    height: 96px;
+    margin-bottom: 14px;
+  }
+  .ux-illustration {
+    width: 64px;
+    height: 64px;
+  }
+  .slide-title {
+    font-size: 1.15rem;
+    margin-bottom: 6px;
+  }
+  .slide-desc {
+    font-size: 0.78rem;
+    line-height: 1.45;
+    margin-bottom: 8px;
+  }
+  .carousel-nav {
+    margin-bottom: 14px;
+  }
+  #link-skip-instructions {
+    margin-top: -4px !important;
+    margin-bottom: 14px !important;
+  }
+  .btn {
+    padding: 12px 24px;
+    font-size: 0.85rem;
+    border-radius: 14px;
+  }
+}
+
 

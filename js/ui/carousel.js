@@ -100,21 +100,21 @@
         } else if (carouselIndex === totalCarouselSlides - 1) {
           if (btnPrev) {
             btnPrev.style.display = 'block';
-            btnPrev.style.width = '35%';
+            btnPrev.style.width = 'calc(35% - 6px)';
           }
           if (btnNext) btnNext.style.display = 'none';
           if (btnScan) {
             btnScan.style.display = 'flex';
-            btnScan.style.width = '65%';
+            btnScan.style.width = 'calc(65% - 6px)';
           }
         } else {
           if (btnPrev) {
             btnPrev.style.display = 'block';
-            btnPrev.style.width = '35%';
+            btnPrev.style.width = 'calc(35% - 6px)';
           }
           if (btnNext) {
             btnNext.style.display = 'block';
-            btnNext.style.width = '65%';
+            btnNext.style.width = 'calc(65% - 6px)';
             btnNext.textContent = 'Next';
           }
           if (btnScan) btnScan.style.display = 'none';
@@ -186,6 +186,35 @@
           startAR();
         }
       });
+
+      // Touch swipe gestures
+      let touchStartX = 0;
+      let touchEndX = 0;
+      const trackContainer = document.querySelector('.carousel-track-container');
+      if (trackContainer) {
+        trackContainer.addEventListener('touchstart', (e) => {
+          touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+        
+        trackContainer.addEventListener('touchend', (e) => {
+          touchEndX = e.changedTouches[0].screenX;
+          const threshold = 40;
+          const diffX = touchStartX - touchEndX;
+          if (Math.abs(diffX) > threshold) {
+            if (diffX > 0) {
+              if (carouselIndex < totalCarouselSlides - 1) {
+                carouselIndex++;
+                updateCarousel();
+              }
+            } else {
+              if (carouselIndex > 0) {
+                carouselIndex--;
+                updateCarousel();
+              }
+            }
+          }
+        }, { passive: true });
+      }
 
       carouselIndex = 0;
       updateCarousel();
